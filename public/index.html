@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Time Machines</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script defer src="assets/script.js"></script>
+  </head>
+  <body class="home" data-state="rest" data-links="disabled">
+    <main class="stage" aria-label="Home">
+      <!--
+        The "monolith" is the only visible element on first load.
+        Links exist in the DOM but are hidden + non-interactive until activation.
+      -->
+      <div
+        class="monolith"
+        id="monolith"
+        role="button"
+        tabindex="0"
+        aria-label="Open navigation"
+        aria-pressed="false"
+      >
+        <nav class="monolith__links" aria-label="Site" aria-hidden="true">
+          <a href="about.html" tabindex="-1"><span class="monolith__label">ABOUT ME</span></a>
+          <a href="research.html" tabindex="-1"><span class="monolith__label">RESEARCH</span></a>
+          <a href="projects.html" tabindex="-1"><span class="monolith__label">PROJECTS</span></a>
+          <a href="writing.html" tabindex="-1"><span class="monolith__label">WRITING</span></a>
+          <a href="now.html" tabindex="-1"><span class="monolith__label">NOW</span></a>
+          <a href="contact.html" tabindex="-1"><span class="monolith__label">CONTACT</span></a>
+        </nav>
+      </div>
+    </main>
+  </body>
+</html>

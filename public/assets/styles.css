@@ -1,0 +1,320 @@
+/*
+  Time Machines - styles
+  - Home: white bg + black oval
+  - Activated: black bg + white oval + black links
+  - Inner pages: black bg + white text
+*/
+
+@font-face {
+  font-family: "PP Supply Sans";
+  src:
+    url("./fonts/Supply/PPSupplySans-Regular.woff2") format("woff2"),
+    url("./fonts/Supply/PPSupplySans-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Supply Sans";
+  src:
+    url("./fonts/Supply/PPSupplySans-Medium.woff2") format("woff2"),
+    url("./fonts/Supply/PPSupplySans-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Supply Sans";
+  src:
+    url("./fonts/Supply/PPSupplySans-Bold.woff2") format("woff2"),
+    url("./fonts/Supply/PPSupplySans-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Rader";
+  src:
+    url("./fonts/Ra%CC%88der/PPRader-Regular.woff2") format("woff2"),
+    url("./fonts/Ra%CC%88der/PPRader-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --transition-ms: 650ms;
+  --transition-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  --bg: #ffffff;
+  --fg: #000000;
+  --monolith: #000000;
+
+  --type: "PP Supply Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --type-page: "PP Supply Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+  /* Oval nav spacing */
+  --nav-pad-x: clamp(16px, 8vw, 44px);
+  --nav-pad-y: 18%;
+  --nav-gap: clamp(4px, 1.2vw, 10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-ms: 0ms;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--type);
+  background-color: var(--bg);
+  color: var(--fg);
+  transition:
+    background-color var(--transition-ms) var(--transition-ease),
+    color var(--transition-ms) var(--transition-ease);
+}
+
+/* -----------------------------
+   Home (oval portal)
+------------------------------ */
+
+.stage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 6vh 6vw;
+}
+
+.monolith {
+  /* Size tuned to feel "album-cover-ish" but responsive */
+  width: clamp(220px, 40vw, 420px);
+  aspect-ratio: 3 / 4;
+
+  background-color: var(--monolith);
+  border-radius: 50%;
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    background-color var(--transition-ms) var(--transition-ease),
+    transform var(--transition-ms) var(--transition-ease);
+}
+
+.monolith:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 6px;
+}
+
+/* Links container inside the oval */
+.monolith__links {
+  width: 100%;
+  height: 100%;
+
+  padding: var(--nav-pad-y) 0;
+  counter-reset: nav;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 18px);
+
+  opacity: 0;
+  transform: translateY(6px);
+
+  /* Non-interactive until JS flips body[data-links] */
+  pointer-events: none;
+
+  transition:
+    opacity var(--transition-ms) var(--transition-ease),
+    transform var(--transition-ms) var(--transition-ease);
+}
+
+.monolith__links a {
+  color: #000;
+  text-decoration: none;
+  font-size: clamp(1.05rem, 2.6vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.2;
+  width: 100%;
+  max-width: calc(100% - (2 * var(--nav-gap)));
+  white-space: nowrap;
+  margin-inline: auto;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: clamp(0.55rem, 1vw, 0.9rem);
+  padding: 0.15rem var(--nav-gap);
+}
+
+.monolith__links a::before {
+  counter-increment: nav;
+  content: counter(nav, decimal-leading-zero);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  grid-column: 1;
+}
+
+.monolith__links a::after {
+  content: "";
+  display: block;
+  height: 1px;
+  width: 100%;
+  background-image: radial-gradient(currentColor 70%, transparent 30%);
+  background-size: 14px 4px;
+  background-repeat: repeat-x;
+  opacity: 0.85;
+  align-self: center;
+  grid-column: 2;
+}
+
+.monolith__label {
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  justify-self: end;
+  grid-column: 3;
+}
+
+.monolith__links a:hover,
+.monolith__links a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/* Activated state: invert colors */
+body.home[data-state="active"] {
+  --bg: #000000;
+  --fg: #ffffff;
+  --monolith: #ffffff;
+}
+
+body.home[data-state="active"] .monolith__links {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.home[data-links="enabled"] .monolith__links {
+  pointer-events: auto;
+}
+
+/* -----------------------------
+   Inner pages
+------------------------------ */
+
+body.page {
+  --bg: #000000;
+  --fg: #ffffff;
+  font-family: var(--type-page);
+  font-size: 1.05rem;
+}
+
+body.page[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #000000;
+}
+
+.page-wrap {
+  max-width: 112ch;
+  margin: 0 auto;
+  padding: 6vh clamp(16px, 5vw, 80px);
+}
+
+.page-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.page-top a {
+  color: currentColor;
+  text-decoration: none;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+}
+
+.page-top a:hover,
+.page-top a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.page-toggle {
+  appearance: none;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.58rem 0.95rem 0.37rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: clamp(16px, 3vh, 28px);
+  right: clamp(16px, 3vw, 28px);
+  z-index: 10;
+  transition:
+    background-color var(--transition-ms) var(--transition-ease),
+    color var(--transition-ms) var(--transition-ease),
+    border-color var(--transition-ms) var(--transition-ease);
+}
+
+.page-toggle:hover,
+.page-toggle:focus-visible {
+  background-color: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+h1 {
+  font-size: clamp(1.2rem, 3.2vw, 2rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 1.25rem 0;
+}
+
+.small {
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+/* Subpage body copy size */
+body.page p {
+  font-size: 1.5rem;
+  line-height: 1.75;
+}
