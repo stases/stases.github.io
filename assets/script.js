@@ -10,6 +10,15 @@
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const readHomeStateFromHash = () => {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#open' || hash === '#active') return 'active';
+    if (hash === '#closed' || hash === '#rest') return 'rest';
+    return null;
+  };
+
+  const hashForState = (state) => (state === 'active' ? '#open' : '#closed');
+
   const setupPageTheme = () => {
     const toggle = document.querySelector('[data-theme-toggle]');
     if (!toggle) return;
@@ -38,6 +47,26 @@
 
     const links = Array.from(document.querySelectorAll('.monolith__links a'));
     const linksContainer = document.querySelector('.monolith__links');
+
+    const syncNavLinks = (active) => {
+      const hash = hashForState(active ? 'active' : 'rest');
+      for (const link of links) {
+        const raw = link.getAttribute('href') || '';
+        const base = raw.split('#')[0];
+        link.setAttribute('href', `${base}${hash}`);
+      }
+    };
+
+    const syncUrlHash = (active) => {
+      const nextHash = hashForState(active ? 'active' : 'rest');
+      if (window.location.hash === nextHash) return;
+
+      if (history.replaceState) {
+        history.replaceState(null, '', `${window.location.pathname}${window.location.search}${nextHash}`);
+      } else {
+        window.location.hash = nextHash;
+      }
+    };
 
     const getTransitionMs = () => {
       // Keep this in sync with --transition-ms in CSS
@@ -106,9 +135,15 @@
       }
     };
 
-    const setActive = (active) => {
+    const setActive = (active, updateUrl = true) => {
       body.dataset.state = active ? 'active' : 'rest';
       monolith.setAttribute('aria-pressed', active ? 'true' : 'false');
+
+      syncNavLinks(active);
+
+      if (updateUrl) {
+        syncUrlHash(active);
+      }
     };
 
     const activate = () => {
@@ -119,11 +154,11 @@
       setLinksEnabled(false);
       setActive(true);
 
-    enableTimer = window.setTimeout(() => {
-      setLinksEnabled(true);
-      busy = false;
-    }, getEnableDelayMs());
-  };
+      enableTimer = window.setTimeout(() => {
+        setLinksEnabled(true);
+        busy = false;
+      }, getEnableDelayMs());
+    };
 
     const deactivate = () => {
       if (busy) return;
@@ -146,7 +181,11 @@
     };
 
     // Start safe: links not focusable/clickable.
-    setLinksEnabled(false);
+    const hashState = readHomeStateFromHash();
+    const startActive = hashState === 'active';
+
+    setActive(startActive, false);
+    setLinksEnabled(startActive);
     computeRowWidths();
 
     monolith.addEventListener('click', () => {
@@ -180,6 +219,28 @@
   if (body.classList.contains('page')) {
     setupPageTheme();
   }
+
+  // Mirror the current page hash into Home links for simple state carryover.
+  const annotateHomeLinks = () => {
+    const homeLinks = Array.from(
+      document.querySelectorAll('a[href="index.html"], a[href="index.html#open"], a[href="index.html#closed"]')
+    );
+    if (!homeLinks.length) return;
+
+    const apply = () => {
+      const state = readHomeStateFromHash();
+      if (!state) return;
+      const target = `index.html${hashForState(state)}`;
+      for (const link of homeLinks) {
+        link.setAttribute('href', target);
+      }
+    };
+
+    apply();
+    window.addEventListener('hashchange', apply);
+  };
+
+  annotateHomeLinks();
 
   if (body.classList.contains('home')) {
     setupHomeMonolith();

@@ -62,6 +62,9 @@
   --nav-pad-x: clamp(16px, 8vw, 44px);
   --nav-pad-y: 18%;
   --nav-gap: clamp(4px, 1.2vw, 10px);
+  --nav-dot-offset: -10px;
+  --nav-dot-height: 8px;
+  --nav-dot-inset: 8px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -180,11 +183,16 @@ body {
 .monolith__links a::after {
   content: "";
   display: block;
-  height: 1px;
+  height: var(--nav-dot-height);
   width: 100%;
-  background-image: radial-gradient(currentColor 70%, transparent 30%);
-  background-size: 14px 4px;
+  box-sizing: border-box;
+  padding-inline: var(--nav-dot-inset);
+  background-clip: content-box;
+  background-image: radial-gradient(circle, currentColor 30%, transparent 32%);
+  background-size: 8px 6px;
   background-repeat: repeat-x;
+  background-position: center;
+  transform: translateY(var(--nav-dot-offset));
   opacity: 0.85;
   align-self: center;
   grid-column: 2;
