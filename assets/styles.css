@@ -336,6 +336,26 @@ body.page p {
   line-height: 1.65;
 }
 
+.about-photo {
+  float: right;
+  width: clamp(180px, 24vw, 320px);
+  max-width: 42%;
+  height: auto;
+  margin: 0 0 1rem 1.5rem;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+@media (max-width: 760px) {
+  .about-photo {
+    float: none;
+    display: block;
+    max-width: min(72vw, 320px);
+    width: 100%;
+    margin: 0 auto 1.25rem;
+  }
+}
+
 .pubs {
   list-style: none;
   padding: 0;
