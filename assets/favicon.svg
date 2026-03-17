@@ -1,4 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="white"/>
-  <ellipse cx="50" cy="50" rx="28" ry="38" fill="black"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040408" />
+      <stop offset="100%" stop-color="#090714" />
+    </linearGradient>
+    <linearGradient id="blueBlock" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f43ff" />
+      <stop offset="100%" stop-color="#d59cf1" />
+    </linearGradient>
+    <linearGradient id="pinkBlock" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#efb9e8" />
+      <stop offset="100%" stop-color="#f8f3fb" />
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="26%" cy="72%" r="34%">
+      <stop offset="0%" stop-color="#fff8ff" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="#f1b1f1" stop-opacity="0.82" />
+      <stop offset="70%" stop-color="#2647ff" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#2647ff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowRight" cx="70%" cy="48%" r="42%">
+      <stop offset="0%" stop-color="#ffdff3" stop-opacity="0.9" />
+      <stop offset="35%" stop-color="#dd9af2" stop-opacity="0.72" />
+      <stop offset="70%" stop-color="#2f4dff" stop-opacity="0.62" />
+      <stop offset="100%" stop-color="#2f4dff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="12" fill="url(#bg)" />
+  <rect width="64" height="64" rx="12" fill="url(#glowLeft)" />
+  <rect width="64" height="64" rx="12" fill="url(#glowRight)" />
+
+  <rect x="7" y="7" width="22" height="22" fill="url(#blueBlock)" fill-opacity="0.94" />
+  <rect x="11" y="29" width="10" height="14" fill="url(#blueBlock)" fill-opacity="0.82" />
+  <rect x="41" y="13" width="12" height="13" fill="url(#pinkBlock)" fill-opacity="0.98" />
+  <rect x="38" y="23" width="13" height="17" fill="url(#pinkBlock)" fill-opacity="0.72" />
+  <rect x="38" y="46" width="12" height="12" fill="url(#pinkBlock)" fill-opacity="0.82" />
+
+  <rect x="18" y="25" width="36" height="15" rx="4" fill="none" stroke="#f6f1fa" stroke-width="1.8" />
+  <line x1="54" y1="32" x2="63" y2="32" stroke="#f6f1fa" stroke-width="1.6" stroke-linecap="round" />
 </svg>
