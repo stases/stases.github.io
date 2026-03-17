@@ -373,7 +373,7 @@
     if (lockedHeight > 0) {
       routeHost.style.minHeight = `${Math.ceil(lockedHeight)}px`;
       currentView.classList.add("is-exiting");
-      await wait(140);
+      await wait(180);
     }
 
     const incomingView = createRouteView(route.html, "is-entering");
@@ -397,7 +397,7 @@
       });
     });
 
-    await wait(360);
+    await wait(560);
     routeHost.style.minHeight = "";
     body.classList.remove("is-routing");
     isNavigating = false;
