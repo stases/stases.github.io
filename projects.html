@@ -9,19 +9,28 @@
     <script defer src="assets/script.js"></script>
   </head>
   <body class="page" data-theme="dark">
-    <div class="page-wrap">
-      <div class="page-top">
-        <a href="index.html">HOME</a>
-        <button class="page-toggle" type="button" data-theme-toggle aria-pressed="false">
-          INVERSE COLORS
-        </button>
-      </div>
-
-      <h1>PROJECTS</h1>
-
-      <p class="small">
-        Get lorem-ipsumd — this page is under construction. Check back soon.
-      </p>
+    <div class="home-backdrop" aria-hidden="true">
+      <div class="home-motion" id="homeMotion"></div>
     </div>
+    <main class="stage" aria-label="Site">
+      <div class="route-host" data-route-host>
+        <article class="route-view route-view--page" data-route-view="page">
+          <div class="page-wrap">
+            <div class="page-top">
+              <a href="index.html">HOME</a>
+              <button class="page-toggle" type="button" data-theme-toggle aria-pressed="false">
+                INVERSE COLORS
+              </button>
+            </div>
+
+            <h1>PROJECTS</h1>
+
+            <p class="small">
+              Get lorem-ipsumd — this page is under construction. Check back soon.
+            </p>
+          </div>
+        </article>
+      </div>
+    </main>
   </body>
 </html>

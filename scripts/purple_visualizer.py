@@ -4,12 +4,12 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-WHITE_SOFT = (238, 232, 240)
-BLUE_DEEP = (22, 39, 180)
-BLUE_ELECTRIC = (32, 61, 236)
-VIOLET = (108, 76, 244)
-MAGENTA = (224, 146, 232)
-PINK_LIGHT = (244, 192, 228)
+WHITE_SOFT = (250, 246, 251)
+BLUE_DEEP = (6, 18, 212)
+BLUE_ELECTRIC = (18, 70, 255)
+VIOLET = (150, 86, 255)
+MAGENTA = (250, 168, 242)
+PINK_LIGHT = (255, 224, 246)
 
 
 def lerp(start, end, t):
@@ -106,7 +106,7 @@ def apply_film_grain(image, amount=0.22, sigma=18, contrast=3.0, blur_radius=0):
     grain_rgb = Image.merge("RGB", (grain, grain, grain))
     overlaid = ImageChops.overlay(image, grain_rgb)
     softened = ImageChops.soft_light(image, grain_rgb)
-    grained = Image.blend(overlaid, softened, 0.35)
+    grained = Image.blend(overlaid, softened, 0.22)
     return Image.blend(image, grained, amount)
 
 
@@ -281,13 +281,13 @@ def draw_glow_rounded_outline(scene, box, radius, outline, width=3, glow_blur=6,
     return scene
 
 
-def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensity=0.24):
+def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensity=0.26):
     scene = Image.new("RGB", (width, height), base_color)
 
     line_color = (242, 236, 245)
     outline_width = max(3, width // 640)
     line_width = max(2, width // 760)
-    card_box = scale_box(width, height, 0.215, 0.335, 0.665, 0.675)
+    card_box = scale_box(width, height, 0.275, 0.41, 0.725, 0.60)
     card_radius = max(30, height // 26)
 
     scene = add_rect_panel(
@@ -327,9 +327,9 @@ def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensi
         WHITE_SOFT,
         center=(0.46, 0.58),
         span=(0.94, 0.98),
-        fill_opacity=0.95,
+        fill_opacity=0.98,
         glow_blur=max(22, width // 54),
-        glow_opacity=0.28,
+        glow_opacity=0.34,
         grain_amount=grain_intensity,
     )
 
@@ -399,9 +399,9 @@ def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensi
         WHITE_SOFT,
         center=(0.52, 0.4),
         span=(0.84, 1.02),
-        fill_opacity=0.9,
+        fill_opacity=0.96,
         glow_blur=max(22, width // 50),
-        glow_opacity=0.28,
+        glow_opacity=0.34,
         grain_amount=grain_intensity,
     )
 
@@ -433,30 +433,21 @@ def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensi
     scene = screen_with_opacity(
         scene,
         scene.filter(ImageFilter.GaussianBlur(radius=max(6, width // 260))),
-        opacity=0.03,
+        opacity=0.045,
     )
 
     crop_draw = ImageDraw.Draw(scene)
     crop_draw.rectangle(scale_box(width, height, 0.755, 0.60, 0.93, 0.78), fill=BLACK)
-    scene = Image.blend(scene, Image.new("RGB", scene.size, BLACK), 0.1)
+    scene = Image.blend(scene, Image.new("RGB", scene.size, BLACK), 0.055)
 
     scene = draw_glow_line(
         scene,
-        (card_box[2], int(height * 0.275), int(width * 0.85), int(height * 0.275)),
+        (card_box[2], int(height * 0.475), int(width * 0.89), int(height * 0.475)),
         fill=line_color,
         width=line_width,
         glow_blur=3,
         glow_opacity=0.16,
     )
-    scene = draw_glow_line(
-        scene,
-        (card_box[2], int(height * 0.475), int(width * 0.85), int(height * 0.475)),
-        fill=line_color,
-        width=line_width,
-        glow_blur=3,
-        glow_opacity=0.16,
-    )
-
     scene = draw_glow_rounded_outline(
         scene,
         card_box,
@@ -493,9 +484,9 @@ def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensi
     luminance_mask = Image.blend(Image.new("L", scene.size, 0), luminance_mask, 0.82)
     final_grain = apply_film_grain(
         scene,
-        amount=min(0.42, grain_intensity * 1.55),
-        sigma=20,
-        contrast=3.15,
+        amount=min(0.5, grain_intensity * 1.9),
+        sigma=22,
+        contrast=3.55,
         blur_radius=0,
     )
     scene = Image.composite(final_grain, scene, luminance_mask)

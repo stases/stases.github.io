@@ -9,36 +9,49 @@
     <script defer src="assets/script.js"></script>
   </head>
   <body class="page" data-theme="dark">
-    <div class="page-wrap">
-      <div class="page-top">
-        <a href="index.html">HOME</a>
-        <button class="page-toggle" type="button" data-theme-toggle aria-pressed="false">
-          INVERSE COLORS
-        </button>
-      </div>
-
-      <h1>ABOUT ME</h1>
-
-      <img
-        class="about-photo"
-        src="assets/images/myself.jpeg"
-        alt="Portrait of Tin Hadziveljkovic"
-      />
-
-      <p class="small">
-        I’m a PhD student at the University of Amsterdam (AMLab / Bosch Delta
-        Lab), advised by Jan-Willem van de Meent. I work on generative models
-        for materials, continuous representations, and representation learning.
-      </p>
-
-      <p>
-        I like building models and representations that stay grounded in physics, but are also usable for in practice.
-      </p>
-
-      <p>
-        Contact: <a href="mailto:t.hadziveljkovic@uva.nl">t.hadziveljkovic@uva.nl</a> or
-        <a href="mailto:tin.hadzi@gmail.com">tin.hadzi@gmail.com</a>
-      </p>
+    <div class="home-backdrop" aria-hidden="true">
+      <div class="home-motion" id="homeMotion"></div>
     </div>
+    <main class="stage" aria-label="Site">
+      <div class="route-host" data-route-host>
+        <article class="route-view route-view--page" data-route-view="page">
+          <div class="page-wrap page-wrap--about">
+            <div class="page-top">
+              <a href="index.html">HOME</a>
+              <button class="page-toggle" type="button" data-theme-toggle aria-pressed="false">
+                INVERSE COLORS
+              </button>
+            </div>
+
+            <h1>ABOUT ME</h1>
+
+            <div class="about-layout">
+              <div class="about-copy">
+                <p class="small">
+                  I’m a PhD student at the University of Amsterdam (AMLab / Bosch Delta
+                  Lab), advised by Jan-Willem van de Meent. I work on generative models
+                  for materials, continuous representations, and representation learning.
+                </p>
+
+                <p>
+                  I like building models and representations that stay grounded in physics, but are also usable for in practice.
+                </p>
+
+                <p>
+                  Contact: <a href="mailto:t.hadziveljkovic@uva.nl">t.hadziveljkovic@uva.nl</a> or
+                  <a href="mailto:tin.hadzi@gmail.com">tin.hadzi@gmail.com</a>
+                </p>
+              </div>
+
+              <img
+                class="about-photo"
+                src="assets/images/myself.jpeg"
+                alt="Portrait of Tin Hadziveljkovic"
+              />
+            </div>
+          </div>
+        </article>
+      </div>
+    </main>
   </body>
 </html>
