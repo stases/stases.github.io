@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Projects</title>
+    <script>
+      (() => {
+        const ua = navigator.userAgent;
+        const vendor = navigator.vendor || "";
+        if (
+          vendor.includes("Apple") &&
+          /Safari/i.test(ua) &&
+          !/CriOS|Chrome|Chromium|Edg|OPR|FxiOS|Firefox|DuckDuckGo/i.test(ua)
+        ) {
+          document.documentElement.classList.add("is-safari");
+        }
+      })();
+    </script>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/styles.css" />
     <script defer src="assets/script.js"></script>

@@ -7,12 +7,29 @@
 
 (() => {
   const body = document.body;
+  const root = document.documentElement;
   const routeHost = document.querySelector("[data-route-host]");
   const parser = new DOMParser();
   const routeCache = new Map();
+  const ROUTE_TRANSITION_MS = 380;
   let isNavigating = false;
 
   if (!body || !routeHost) return;
+
+  const isSafariBrowser = () => {
+    const ua = window.navigator.userAgent;
+    const vendor = window.navigator.vendor || "";
+
+    return (
+      vendor.includes("Apple") &&
+      /Safari/i.test(ua) &&
+      !/CriOS|Chrome|Chromium|Edg|OPR|FxiOS|Firefox|DuckDuckGo/i.test(ua)
+    );
+  };
+
+  if (isSafariBrowser()) {
+    root.classList.add("is-safari");
+  }
 
   const MOTION_SCENE = [
     {
@@ -214,12 +231,17 @@
 
   const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
   const homeRoute = () => new URL("index.html", window.location.href).href;
-  const createRouteView = (html, stateClass = "") => {
+  const createRouteView = (route, stateClass = "", themeOverride = "") => {
     const template = document.createElement("template");
-    template.innerHTML = html.trim();
+    template.innerHTML = route.html.trim();
     const view = template.content.firstElementChild;
 
     if (!view) return null;
+    if (route.kind === "page") {
+      view.dataset.theme = themeOverride || route.theme || "dark";
+    } else {
+      view.removeAttribute("data-theme");
+    }
     if (stateClass) view.classList.add(stateClass);
 
     return view;
@@ -241,25 +263,34 @@
   };
 
   const setupPageTheme = (root = document) => {
-    const toggle = root.querySelector("[data-theme-toggle]");
-    if (!toggle || toggle.dataset.themeReady === "true") return;
+    const toggles = root.querySelectorAll("[data-theme-toggle]");
+    if (toggles.length === 0) return;
 
-    const setTheme = (theme) => {
-      body.dataset.theme = theme;
-      toggle.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
-      toggle.setAttribute(
-        "aria-label",
-        theme === "light" ? "Switch to dark theme" : "Switch to light theme"
-      );
-    };
+    for (const toggle of toggles) {
+      if (toggle.dataset.themeReady === "true") continue;
 
-    toggle.dataset.themeReady = "true";
-    setTheme(body.dataset.theme === "light" ? "light" : "dark");
+      const view = toggle.closest('[data-route-view="page"]');
+      if (!view) continue;
 
-    toggle.addEventListener("click", () => {
-      const next = body.dataset.theme === "light" ? "dark" : "light";
-      setTheme(next);
-    });
+      const setTheme = (theme) => {
+        const nextTheme = theme === "light" ? "light" : "dark";
+        view.dataset.theme = nextTheme;
+        body.dataset.theme = nextTheme;
+        toggle.setAttribute("aria-pressed", nextTheme === "light" ? "true" : "false");
+        toggle.setAttribute(
+          "aria-label",
+          nextTheme === "light" ? "Switch to dark theme" : "Switch to light theme"
+        );
+      };
+
+      toggle.dataset.themeReady = "true";
+      setTheme(view.dataset.theme || body.dataset.theme || "dark");
+
+      toggle.addEventListener("click", () => {
+        const next = view.dataset.theme === "light" ? "dark" : "light";
+        setTheme(next);
+      });
+    }
   };
 
   const setupBackdropMotion = () => {
@@ -331,8 +362,7 @@
   };
 
   const applyRouteState = (route, themeOverride = "") => {
-    body.classList.toggle("home", route.kind === "home");
-    body.classList.toggle("page", route.kind === "page");
+    body.dataset.routeKind = route.kind;
 
     if (route.kind === "page") {
       body.dataset.theme = themeOverride || route.theme || "dark";
@@ -365,39 +395,51 @@
     isNavigating = true;
     body.classList.add("is-routing");
 
-    const currentView = routeHost.querySelector("[data-route-view]");
-    const previousTheme = body.classList.contains("page") ? body.dataset.theme || "dark" : "";
+    const currentView =
+      routeHost.querySelector("[data-route-view]:not(.is-exiting)") ||
+      routeHost.querySelector("[data-route-view]");
+    const previousTheme =
+      currentView?.dataset.routeView === "page" ? currentView.dataset.theme || body.dataset.theme || "dark" : "";
     const nextTheme = route.kind === "page" ? previousTheme || route.theme || "dark" : "";
-    const lockedHeight = currentView ? currentView.getBoundingClientRect().height : 0;
+    const lockedHeight = Math.max(
+      routeHost.getBoundingClientRect().height,
+      currentView ? currentView.getBoundingClientRect().height : 0
+    );
+    const incomingView = createRouteView(route, "is-entering", nextTheme);
+
+    if (!incomingView) {
+      body.classList.remove("is-routing");
+      isNavigating = false;
+      window.location.href = targetUrl.href;
+      return;
+    }
 
     if (lockedHeight > 0) {
       routeHost.style.minHeight = `${Math.ceil(lockedHeight)}px`;
-      currentView.classList.add("is-exiting");
-      await wait(180);
     }
 
-    const incomingView = createRouteView(route.html, "is-entering");
+    routeHost.classList.add("is-transitioning");
+    currentView?.classList.add("is-exiting");
+    currentView?.setAttribute("aria-hidden", "true");
+
+    routeHost.appendChild(incomingView);
     applyRouteState(route, nextTheme);
-    routeHost.replaceChildren();
-    if (incomingView) {
-      routeHost.appendChild(incomingView);
-    }
+
     if (pushState) {
       window.history.pushState({ path: targetUrl.pathname }, "", targetUrl.href);
     }
 
     window.scrollTo(0, 0);
 
-    setupPageTheme(routeHost);
+    setupPageTheme(incomingView);
     setupBackdropMotion();
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        incomingView?.classList.remove("is-entering");
-      });
-    });
+    await wait(34);
+    incomingView.classList.remove("is-entering");
 
-    await wait(560);
+    await wait(ROUTE_TRANSITION_MS);
+    currentView?.remove();
+    routeHost.classList.remove("is-transitioning");
     routeHost.style.minHeight = "";
     body.classList.remove("is-routing");
     isNavigating = false;
@@ -435,7 +477,7 @@
       event.ctrlKey ||
       event.shiftKey ||
       event.altKey ||
-      !body.classList.contains("page")
+      body.dataset.routeKind !== "page"
     ) {
       return;
     }
@@ -449,6 +491,18 @@
   window.addEventListener("popstate", () => {
     swapRoute(window.location.href, { pushState: false });
   });
+
+  const initialView = routeHost.querySelector("[data-route-view]");
+
+  if (initialView?.dataset.routeView === "page") {
+    const initialTheme = body.dataset.theme === "light" ? "light" : body.dataset.theme || "dark";
+    body.dataset.routeKind = "page";
+    body.dataset.theme = initialTheme;
+    initialView.dataset.theme = initialTheme;
+  } else {
+    body.dataset.routeKind = "home";
+    body.removeAttribute("data-theme");
+  }
 
   setupBackdropMotion();
   setupPageTheme(routeHost);

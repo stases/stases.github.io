@@ -48,8 +48,8 @@
   --transition-ms: 420ms;
   --transition-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
 
-  --bg: #ffffff;
-  --fg: #000000;
+  --home-bg: #050507;
+  --home-fg: #f4eef8;
 
   --type: "PP Supply Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
   /* Subpages: calmer mono stack for a typewriter feel without harshness */
@@ -75,11 +75,8 @@ body {
 body {
   margin: 0;
   font-family: var(--type);
-  background-color: var(--bg);
-  color: var(--fg);
-  transition:
-    background-color var(--transition-ms) var(--transition-ease),
-    color var(--transition-ms) var(--transition-ease);
+  background-color: var(--home-bg);
+  color: var(--home-fg);
 }
 
 /* -----------------------------
@@ -91,19 +88,32 @@ body {
   display: grid;
   padding: 8vh 6vw;
   position: relative;
-  isolation: isolate;
 }
 
 .route-host {
   width: 100%;
   position: relative;
+  min-height: calc(100vh - 16vh);
+}
+
+.route-host.is-transitioning {
+  display: grid;
+}
+
+.route-host.is-transitioning > .route-view {
+  grid-area: 1 / 1;
+  align-self: start;
+  justify-self: stretch;
 }
 
 .route-view {
+  width: 100%;
   transition:
     opacity 260ms var(--transition-ease),
     transform 340ms var(--transition-ease),
     filter 340ms var(--transition-ease);
+  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
 }
 
 .route-view.is-exiting,
@@ -113,30 +123,31 @@ body {
   filter: blur(8px);
 }
 
+.is-safari .route-view {
+  transition:
+    opacity 260ms var(--transition-ease),
+    transform 340ms var(--transition-ease);
+  will-change: opacity, transform;
+}
+
+.is-safari .route-view.is-exiting,
+.is-safari .route-view.is-entering {
+  transform: translate3d(0, 10px, 0);
+  filter: none;
+}
+
 body.is-routing .route-host {
   pointer-events: none;
 }
 
-body.home {
-  --bg: #050507;
-  --fg: #f4eef8;
-  --backdrop-overlay-opacity: 0.82;
-  background-color: var(--bg);
-  color: var(--fg);
-}
-
-body.home .stage {
-  overflow: hidden;
-  place-items: center;
-}
-
-body.home .route-host {
+.route-view--home {
+  min-height: calc(100vh - 16vh);
   display: grid;
   place-items: center;
+  color: var(--home-fg);
 }
 
 .home-backdrop {
-  --backdrop-blur: 0px;
   position: fixed;
   inset: 0;
   z-index: -2;
@@ -144,11 +155,11 @@ body.home .route-host {
   background:
     radial-gradient(circle at center, rgba(4, 4, 10, 0.02), rgba(4, 4, 10, 0.38) 72%),
     url("./images/purple-home-bg.png") center center / cover no-repeat;
-  filter: blur(var(--backdrop-blur)) saturate(1.28) contrast(1.14);
+  filter: saturate(1.28) contrast(1.14);
   transform: scale(1.03);
   transition:
-    filter 560ms var(--transition-ease),
-    transform 560ms var(--transition-ease);
+    filter 520ms var(--transition-ease),
+    transform 520ms var(--transition-ease);
 }
 
 .home-backdrop::before {
@@ -167,11 +178,36 @@ body.home .route-host {
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: var(--backdrop-overlay-opacity, 1);
-  transition: opacity 560ms var(--transition-ease);
+  opacity: 0.82;
   background:
     linear-gradient(180deg, rgba(2, 2, 6, 0.52), rgba(2, 2, 6, 0.14) 22%, rgba(2, 2, 6, 0.42)),
     radial-gradient(circle at center, rgba(18, 10, 34, 0.09), rgba(3, 3, 6, 0.58) 82%);
+}
+
+.page .home-backdrop,
+body[data-route-kind="page"] .home-backdrop {
+  filter: blur(12px) saturate(1.16) contrast(1.06);
+  transform: scale(1.08);
+}
+
+.is-safari .page .home-backdrop,
+.is-safari body[data-route-kind="page"] .home-backdrop {
+  filter: none;
+  transform: scale(1.03);
+}
+
+.is-safari .home-backdrop {
+  transition: opacity 260ms var(--transition-ease);
+}
+
+.is-safari .page .home-backdrop::after,
+.is-safari body[data-route-kind="page"] .home-backdrop::after {
+  opacity: 0.9;
+}
+
+.is-safari .page .home-motion__item,
+.is-safari body[data-route-kind="page"] .home-motion__item {
+  animation: none;
 }
 
 .home-motion {
@@ -318,57 +354,106 @@ body.home .route-host {
    Inner pages
 ------------------------------ */
 
-body.page {
-  --bg: rgba(8, 8, 14, 0.72);
-  --fg: #ffffff;
-  --backdrop-overlay-opacity: 1;
-  --page-border: rgba(255, 255, 255, 0.14);
-  --page-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
-  --page-bg-soft: rgba(8, 8, 14, 0.44);
-  --page-border-soft: rgba(255, 255, 255, 0.02);
-  --page-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.16);
+.route-view--page {
+  --page-bg: rgba(7, 9, 16, 0.5);
+  --page-fg: #ffffff;
+  --page-border: rgba(255, 255, 255, 0.18);
+  --page-shadow: 0 32px 90px rgba(0, 0, 0, 0.32);
+  --page-bg-soft: rgba(7, 9, 16, 0.38);
+  --page-border-soft: rgba(255, 255, 255, 0.1);
+  --page-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.14);
+  --page-glass-top: rgba(22, 26, 40, 0.5);
+  --page-glass-bottom: rgba(8, 10, 18, 0.66);
+  --page-glass-highlight: rgba(255, 255, 255, 0.14);
+  --page-glass-highlight-soft: rgba(255, 255, 255, 0.04);
+  --page-glass-inner-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   font-family: var(--type-page);
   font-size: 1.05rem;
-  background-color: transparent;
-  color: var(--fg);
+  color: var(--page-fg);
 }
 
-body.page[data-theme="light"] {
-  --bg: rgba(249, 246, 252, 0.84);
-  --fg: #07070a;
-  --backdrop-overlay-opacity: 0.48;
-  --page-border: rgba(255, 255, 255, 0.44);
-  --page-shadow: 0 32px 90px rgba(0, 0, 0, 0.18);
-  --page-bg-soft: rgba(249, 246, 252, 0.52);
-  --page-border-soft: rgba(255, 255, 255, 0.08);
-  --page-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.08);
-}
-
-body.page .stage {
-  align-items: start;
-}
-
-body.page .home-backdrop {
-  --backdrop-blur: 11px;
-  transform: scale(1.07);
-}
-
-body.page .route-host {
-  min-height: calc(100vh - 16vh);
+.route-view--page[data-theme="light"] {
+  --page-bg: rgba(249, 246, 252, 0.56);
+  --page-fg: #07070a;
+  --page-border: rgba(255, 255, 255, 0.36);
+  --page-shadow: 0 32px 90px rgba(0, 0, 0, 0.14);
+  --page-bg-soft: rgba(249, 246, 252, 0.42);
+  --page-border-soft: rgba(255, 255, 255, 0.18);
+  --page-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.06);
+  --page-glass-top: rgba(255, 255, 255, 0.58);
+  --page-glass-bottom: rgba(243, 238, 248, 0.72);
+  --page-glass-highlight: rgba(255, 255, 255, 0.62);
+  --page-glass-highlight-soft: rgba(255, 255, 255, 0.14);
+  --page-glass-inner-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .page-wrap {
   max-width: 112ch;
   margin: 0 auto;
   padding: clamp(28px, 5vw, 64px);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   border-radius: 30px;
-  border: 1px solid var(--page-border);
-  background-color: var(--bg);
+  border: 1px solid transparent;
+  background-color: transparent;
   box-shadow: var(--page-shadow);
   transition:
-    background-color 520ms var(--transition-ease),
     border-color 520ms var(--transition-ease),
     box-shadow 520ms var(--transition-ease);
+}
+
+.page-wrap::before,
+.page-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transition:
+    background 520ms var(--transition-ease),
+    border-color 520ms var(--transition-ease),
+    box-shadow 520ms var(--transition-ease),
+    -webkit-backdrop-filter 520ms var(--transition-ease),
+    backdrop-filter 520ms var(--transition-ease);
+}
+
+.page-wrap::before {
+  z-index: -2;
+  background:
+    linear-gradient(180deg, var(--page-glass-top), var(--page-glass-bottom)),
+    linear-gradient(135deg, var(--page-glass-highlight), transparent 34%, var(--page-glass-highlight-soft));
+  -webkit-backdrop-filter: blur(32px) saturate(1.42);
+  backdrop-filter: blur(32px) saturate(1.42);
+}
+
+.is-safari .page-wrap::before {
+  background:
+    linear-gradient(180deg, rgba(24, 28, 42, 0.82), rgba(8, 10, 18, 0.92)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 36%, rgba(255, 255, 255, 0.03));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.is-safari .route-view--page[data-theme="light"] .page-wrap::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(242, 237, 247, 0.94)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), transparent 40%, rgba(255, 255, 255, 0.12));
+}
+
+.page-wrap::after {
+  z-index: -1;
+  border: 1px solid var(--page-border);
+  box-shadow: var(--page-glass-inner-shadow);
+}
+
+.page-wrap > * {
+  position: relative;
+  z-index: 1;
 }
 
 .page-wrap--about {
@@ -391,9 +476,37 @@ body.page .route-host {
 
 .route-view.is-entering .page-wrap,
 .route-view.is-exiting .page-wrap {
-  background-color: var(--page-bg-soft);
-  border-color: var(--page-border-soft);
   box-shadow: var(--page-shadow-soft);
+}
+
+.route-view.is-entering .page-wrap::before,
+.route-view.is-exiting .page-wrap::before {
+  background:
+    linear-gradient(180deg, var(--page-bg-soft), var(--page-bg)),
+    linear-gradient(135deg, var(--page-glass-highlight-soft), transparent 38%, rgba(255, 255, 255, 0.02));
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  backdrop-filter: blur(22px) saturate(1.18);
+}
+
+.is-safari .route-view.is-entering .page-wrap::before,
+.is-safari .route-view.is-exiting .page-wrap::before {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.is-safari .page-wrap,
+.is-safari .page-wrap::before,
+.is-safari .page-wrap::after {
+  transition:
+    background 260ms var(--transition-ease),
+    border-color 260ms var(--transition-ease),
+    box-shadow 260ms var(--transition-ease),
+    opacity 260ms var(--transition-ease);
+}
+
+.route-view.is-entering .page-wrap::after,
+.route-view.is-exiting .page-wrap::after {
+  border-color: var(--page-border-soft);
 }
 
 .page-top {
@@ -444,26 +557,26 @@ body.page .route-host {
 
 .page-toggle:hover,
 .page-toggle:focus-visible {
-  background-color: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
+  background-color: var(--page-fg);
+  color: var(--page-bg);
+  border-color: var(--page-fg);
 }
 
-h1 {
+.route-view--page h1 {
   font-size: clamp(1.2rem, 3.2vw, 2rem);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin: 0 0 1.8rem 0;
 }
 
-h2 {
+.route-view--page h2 {
   font-size: clamp(1.05rem, 2.6vw, 1.5rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 2.4rem 0 1.2rem 0;
 }
 
-p {
+.route-view--page p {
   font-size: 1rem;
   line-height: 1.7;
   margin: 0 0 1.25rem 0;
@@ -475,7 +588,7 @@ p {
 }
 
 /* Subpage body copy size */
-body.page p {
+.route-view--page p {
   font-size: 1.15rem;
   line-height: 1.65;
 }
@@ -493,10 +606,6 @@ body.page p {
 }
 
 @media (max-width: 760px) {
-  body.page .stage {
-    padding-top: 10vh;
-  }
-
   .page-wrap {
     padding: 1.4rem 1.1rem 1.6rem;
     border-radius: 22px;
