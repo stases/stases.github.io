@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interactive Periodic Table</title>
+  <meta name="description" content="A GitHub Pages-ready interactive periodic table with an animated electronic shell sidebar.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap"
+  >
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="page-header">
+      <div class="header-copy">
+        <p class="eyebrow">GitHub Pages-ready • Vanilla HTML, CSS, and JS</p>
+        <h1>Interactive Periodic Table</h1>
+        <p class="subtitle">
+          Click any element to update the side panel. The layout is inspired by the smooth split-view
+          experience you shared, but built as a clean static site you can drop directly into a repository.
+        </p>
+      </div>
+
+      <div class="toolbar" role="search">
+        <label class="search-field" for="elementSearch">
+          <span class="visually-hidden">Search elements</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
+            <path d="M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13Zm0 1.8a4.7 4.7 0 1 0 0 9.4a4.7 4.7 0 0 0 0-9.4Zm8.87 11.6l2.63 2.64l-1.27 1.27l-2.64-2.63l1.28-1.28Z"></path>
+          </svg>
+          <input id="elementSearch" type="search" placeholder="Search by name, symbol, or atomic number" autocomplete="off">
+        </label>
+        <button id="clearFilters" class="ghost-button" type="button">Clear filters</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="table-card" aria-labelledby="tableHeading">
+        <div class="section-heading">
+          <div>
+            <h2 id="tableHeading">Periodic table</h2>
+          </div>
+        </div>
+
+        <div class="legend" id="categoryLegend" aria-label="Element categories"></div>
+
+        <div class="table-scroll">
+          <div class="periodic-grid" id="periodicGrid" aria-label="Interactive periodic table"></div>
+          <div class="empty-state hidden" id="tableEmptyState">
+            No elements match the current search or category filter.
+          </div>
+        </div>
+      </section>
+
+      <aside class="detail-card cat-metalloid" id="detailCard" aria-live="polite">
+        <div class="detail-header">
+          <p class="detail-kicker" id="detailKicker">Atomic number 32</p>
+          <h2 class="detail-title" id="detailTitle">Germanium (Ge)</h2>
+          <p class="detail-category" id="detailCategory">Metalloid • Solid • p-block</p>
+        </div>
+
+        <section class="atom-panel" aria-labelledby="atomHeading">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Animated shell view</p>
+              <h3 id="atomHeading">Electronic structure</h3>
+            </div>
+            <p class="atom-note">Bohr-style representation</p>
+          </div>
+          <div class="atom-canvas-wrap" id="atomCanvasWrap">
+            <canvas id="atomCanvas" aria-label="Animated shell visualization"></canvas>
+          </div>
+        </section>
+
+        <section class="stats-grid" id="statsGrid" aria-label="Element statistics"></section>
+
+        <section class="info-block" aria-labelledby="configHeading">
+          <div class="info-block-heading">
+            <h3 id="configHeading">Electron configuration</h3>
+            <span class="info-pill" id="outerElectronPill">4 outer electrons</span>
+          </div>
+          <p class="mono" id="detailConfigShort">[Ar] 3d10 4s2 4p2</p>
+          <p class="mono subtle" id="detailConfigFull">1s2 2s2 2p6 3s2 3p6 4s2 3d10 4p2</p>
+          <div class="subatomic-reps" id="subatomicReps" aria-label="Subatomic representations">
+            <section class="subatomic-card" aria-labelledby="valenceBarsHeading">
+              <h4 class="subatomic-heading" id="valenceBarsHeading">Ground-state valence occupancy</h4>
+              <div class="subatomic-bars" id="valenceBars"></div>
+            </section>
+
+            <section class="subatomic-card" aria-labelledby="pcaSignatureHeading">
+              <h4 class="subatomic-heading" id="pcaSignatureHeading">PCA24 signature</h4>
+              <div class="pca-signature" id="pcaSignature"></div>
+            </section>
+          </div>
+          <div class="shell-chips" id="shellChips"></div>
+        </section>
+
+        <section class="info-block" aria-labelledby="notesHeading">
+          <h3 id="notesHeading">Sidebar copy</h3>
+          <p id="detailBlurb">
+            Germanium sits in period 4, group 14, and the p-block. Its shell distribution is 2 • 8 • 18 • 4,
+            giving it 4 electrons in the outermost shell. Replace this text in app.js with your own descriptions,
+            links, lesson notes, or portfolio copy.
+          </p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="./elements-data.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>

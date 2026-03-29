@@ -272,20 +272,10 @@ def draw_glow_line(scene, points, fill, width=2, glow_blur=4, glow_opacity=0.22)
     return scene
 
 
-def draw_glow_rounded_outline(scene, box, radius, outline, width=3, glow_blur=6, glow_opacity=0.2):
-    overlay = Image.new("RGB", scene.size, BLACK)
-    draw = ImageDraw.Draw(overlay)
-    draw.rounded_rectangle(box, radius=radius, outline=outline, width=width)
-    scene = screen_with_opacity(scene, overlay.filter(ImageFilter.GaussianBlur(radius=glow_blur)), glow_opacity)
-    ImageDraw.Draw(scene).rounded_rectangle(box, radius=radius, outline=outline, width=width)
-    return scene
-
-
 def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensity=0.26):
     scene = Image.new("RGB", (width, height), base_color)
 
     line_color = (242, 236, 245)
-    outline_width = max(3, width // 640)
     line_width = max(2, width // 760)
     card_box = scale_box(width, height, 0.275, 0.41, 0.725, 0.60)
     card_radius = max(30, height // 26)
@@ -448,16 +438,6 @@ def generate_generative_art_scene(width, height, base_color=BLACK, grain_intensi
         glow_blur=3,
         glow_opacity=0.16,
     )
-    scene = draw_glow_rounded_outline(
-        scene,
-        card_box,
-        radius=card_radius,
-        outline=line_color,
-        width=outline_width,
-        glow_blur=6,
-        glow_opacity=0.18,
-    )
-
     scene = add_rect_panel(
         scene,
         scale_box(width, height, 0.32, 0.79, 0.40, 0.895),

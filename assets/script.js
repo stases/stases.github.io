@@ -12,7 +12,25 @@
   const parser = new DOMParser();
   const routeCache = new Map();
   const ROUTE_TRANSITION_MS = 380;
+  const SHELL_ROUTE_PATHS = new Set([
+    "/index.html",
+    "/about.html",
+    "/research.html",
+    "/blogposts.html",
+    "/contact.html",
+  ]);
   let isNavigating = false;
+  let homeNavOutlineState = null;
+  const HOME_BACKDROP_ART_WIDTH = 1920;
+  const HOME_BACKDROP_ART_HEIGHT = 1080;
+  const HOME_BACKDROP_SCALE = 1.03;
+  const HOME_BACKDROP_OUTLINE_WIDTH = 3;
+  const HOME_BACKDROP_OUTLINE_RADIUS = 41;
+  const HOME_BACKDROP_OUTLINE_GLOW_BLUR = 6;
+  const HOME_KICKER_OUTLINE_GAP_MIN = 8;
+  const HOME_KICKER_OUTLINE_GAP_MAX = 14;
+  const PERIODIC_TABLE_EMBED_MESSAGE = "periodic-table:height";
+  let periodicTableEmbedBridgeReady = false;
 
   if (!body || !routeHost) return;
 
@@ -247,20 +265,31 @@
     return view;
   };
 
-  const normalizePath = (value) => {
+  const normalizeRoutePath = (value) => {
     const url = new URL(value, window.location.href);
     let path = url.pathname;
 
     if (path === "/") path = "/index.html";
     if (path.endsWith("/")) path += "index.html";
 
-    return `${path}${url.search}`;
+    return path;
+  };
+
+  const normalizePath = (value) => {
+    const url = new URL(value, window.location.href);
+    return `${normalizeRoutePath(url.href)}${url.search}`;
   };
 
   const isInternalHtmlRoute = (url) => {
     if (url.origin !== window.location.origin) return false;
     return url.pathname.endsWith(".html") || url.pathname === "/" || url.pathname.endsWith("/");
   };
+
+  const isStandaloneDocument = () =>
+    body.classList.contains("post-page") || body.dataset.routeVariant === "post";
+
+  const shouldUseClientRouter = (url) =>
+    !isStandaloneDocument() && SHELL_ROUTE_PATHS.has(normalizeRoutePath(url));
 
   const setupPageTheme = (root = document) => {
     const toggles = root.querySelectorAll("[data-theme-toggle]");
@@ -323,13 +352,273 @@
     }
   };
 
+  const syncPeriodicTableEmbedHeight = (iframe, height) => {
+    if (!iframe) return;
+
+    const nextHeight = Number(height);
+    if (!Number.isFinite(nextHeight)) return;
+
+    const minHeight = Number(iframe.dataset.embedMinHeight || 0);
+    iframe.style.height = `${Math.max(Math.ceil(nextHeight), minHeight)}px`;
+  };
+
+  const setupPeriodicTableEmbeds = (root = document) => {
+    const embeds = root.querySelectorAll("[data-periodic-table-embed]");
+    if (embeds.length === 0) return;
+
+    if (!periodicTableEmbedBridgeReady) {
+      window.addEventListener("message", (event) => {
+        if (!event.data || event.data.type !== PERIODIC_TABLE_EMBED_MESSAGE) {
+          return;
+        }
+
+        const iframe = [...document.querySelectorAll("[data-periodic-table-embed]")].find(
+          (candidate) => candidate.contentWindow === event.source
+        );
+
+        if (!iframe) {
+          return;
+        }
+
+        syncPeriodicTableEmbedHeight(iframe, event.data.height);
+      });
+
+      periodicTableEmbedBridgeReady = true;
+    }
+
+    for (const iframe of embeds) {
+      if (iframe.dataset.embedReady === "true") {
+        continue;
+      }
+
+      iframe.dataset.embedReady = "true";
+      iframe.addEventListener("load", () => {
+        try {
+          const doc = iframe.contentDocument;
+          if (!doc?.documentElement) {
+            return;
+          }
+
+          syncPeriodicTableEmbedHeight(
+            iframe,
+            Math.max(
+              doc.documentElement.scrollHeight,
+              doc.documentElement.offsetHeight,
+              doc.body ? doc.body.scrollHeight : 0,
+              doc.body ? doc.body.offsetHeight : 0
+            )
+          );
+        } catch (error) {
+          // Ignore cross-document access issues and rely on postMessage updates.
+        }
+      });
+    }
+  };
+
+  const teardownHomeNavOutline = () => {
+    if (!homeNavOutlineState) return;
+
+    if (homeNavOutlineState.frame) {
+      window.cancelAnimationFrame(homeNavOutlineState.frame);
+    }
+
+    if (homeNavOutlineState.resizeObserver) {
+      homeNavOutlineState.resizeObserver.disconnect();
+    }
+
+    if (homeNavOutlineState.handleResize) {
+      window.removeEventListener("resize", homeNavOutlineState.handleResize);
+    }
+
+    homeNavOutlineState = null;
+  };
+
+  const getHomeView = (root = document) => {
+    if (!root) return null;
+    if (typeof root.matches === "function" && root.matches('[data-route-view="home"]')) {
+      return root;
+    }
+
+    if (typeof root.querySelector === "function") {
+      return root.querySelector('[data-route-view="home"]');
+    }
+
+    return null;
+  };
+
+  const syncHomeNavOutlineStyle = (outline) => {
+    const coverScale =
+      Math.max(
+        window.innerWidth / HOME_BACKDROP_ART_WIDTH,
+        window.innerHeight / HOME_BACKDROP_ART_HEIGHT
+      ) * HOME_BACKDROP_SCALE;
+
+    outline.style.setProperty(
+      "--home-nav-outline-width",
+      `${(HOME_BACKDROP_OUTLINE_WIDTH * coverScale).toFixed(2)}px`
+    );
+    outline.style.setProperty(
+      "--home-nav-outline-radius",
+      `${(HOME_BACKDROP_OUTLINE_RADIUS * coverScale).toFixed(2)}px`
+    );
+    outline.style.setProperty(
+      "--home-nav-outline-glow-blur",
+      `${(HOME_BACKDROP_OUTLINE_GLOW_BLUR * coverScale).toFixed(2)}px`
+    );
+  };
+
+  const updateHomeNavOutline = () => {
+    if (!homeNavOutlineState) return;
+
+    const { landing, nav, outline } = homeNavOutlineState;
+    if (!landing?.isConnected || !nav?.isConnected || !outline?.isConnected) {
+      teardownHomeNavOutline();
+      return;
+    }
+
+    const linkRects = [...nav.querySelectorAll("a")]
+      .map((link) => link.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0);
+
+    if (linkRects.length === 0) {
+      outline.classList.remove("is-ready");
+      return;
+    }
+
+    const landingRect = landing.getBoundingClientRect();
+    const kickerRect = landing.querySelector(".home-kicker")?.getBoundingClientRect() || null;
+    const bounds = linkRects.reduce(
+      (acc, rect) => ({
+        left: Math.min(acc.left, rect.left),
+        top: Math.min(acc.top, rect.top),
+        right: Math.max(acc.right, rect.right),
+        bottom: Math.max(acc.bottom, rect.bottom),
+      }),
+      {
+        left: Number.POSITIVE_INFINITY,
+        top: Number.POSITIVE_INFINITY,
+        right: Number.NEGATIVE_INFINITY,
+        bottom: Number.NEGATIVE_INFINITY,
+      }
+    );
+
+    const paddingX = Math.max(22, Math.min(44, window.innerWidth * 0.03));
+    const paddingY = Math.max(18, Math.min(34, window.innerWidth * 0.022));
+    const kickerGap = Math.max(
+      HOME_KICKER_OUTLINE_GAP_MIN,
+      Math.min(HOME_KICKER_OUTLINE_GAP_MAX, window.innerWidth * 0.008)
+    );
+    const paddingTop = kickerRect
+      ? Math.max(0, Math.min(paddingY, bounds.top - kickerRect.bottom - kickerGap))
+      : paddingY;
+    const paddingBottom = paddingY;
+    const left = bounds.left - landingRect.left - paddingX;
+    const top = bounds.top - landingRect.top - paddingTop;
+    const width = bounds.right - bounds.left + paddingX * 2;
+    const height = bounds.bottom - bounds.top + paddingTop + paddingBottom;
+
+    syncHomeNavOutlineStyle(outline);
+    outline.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+    outline.style.width = `${Math.round(width)}px`;
+    outline.style.height = `${Math.round(height)}px`;
+    outline.classList.add("is-ready");
+  };
+
+  const scheduleHomeNavOutline = () => {
+    if (!homeNavOutlineState) return;
+    if (homeNavOutlineState.frame) {
+      window.cancelAnimationFrame(homeNavOutlineState.frame);
+    }
+
+    homeNavOutlineState.frame = window.requestAnimationFrame(() => {
+      if (homeNavOutlineState) {
+        homeNavOutlineState.frame = 0;
+      }
+      updateHomeNavOutline();
+    });
+  };
+
+  const setupHomeNavOutline = (root = document) => {
+    const homeView = getHomeView(root);
+    if (!homeView) {
+      teardownHomeNavOutline();
+      return;
+    }
+
+    const landing = homeView.querySelector(".home-landing");
+    const nav = homeView.querySelector(".home-nav");
+    if (!landing || !nav) {
+      teardownHomeNavOutline();
+      return;
+    }
+
+    if (homeNavOutlineState?.nav === nav && homeNavOutlineState.outline?.isConnected) {
+      scheduleHomeNavOutline();
+      return;
+    }
+
+    teardownHomeNavOutline();
+
+    let outline = landing.querySelector(".home-nav-outline");
+    if (!outline) {
+      outline = document.createElement("span");
+      outline.className = "home-nav-outline";
+      outline.setAttribute("aria-hidden", "true");
+      landing.appendChild(outline);
+    }
+
+    const handleResize = () => {
+      scheduleHomeNavOutline();
+    };
+
+    const resizeObserver =
+      typeof window.ResizeObserver === "function"
+        ? new window.ResizeObserver(() => {
+            scheduleHomeNavOutline();
+          })
+        : null;
+
+    if (resizeObserver) {
+      resizeObserver.observe(landing);
+      resizeObserver.observe(nav);
+      for (const link of nav.querySelectorAll("a")) {
+        resizeObserver.observe(link);
+      }
+    }
+
+    window.addEventListener("resize", handleResize, { passive: true });
+
+    homeNavOutlineState = {
+      landing,
+      nav,
+      outline,
+      resizeObserver,
+      handleResize,
+      frame: 0,
+    };
+
+    scheduleHomeNavOutline();
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (homeNavOutlineState?.nav === nav) {
+          scheduleHomeNavOutline();
+        }
+      });
+    }
+  };
+
   const readRoute = (doc) => {
     const view = doc.querySelector("[data-route-view]");
     if (!view) return null;
 
+    const kind = doc.body.classList.contains("page") ? "page" : "home";
+    const variant = view.classList.contains("route-view--post") ? "post" : kind;
+
     return {
       html: view.outerHTML,
-      kind: doc.body.classList.contains("page") ? "page" : "home",
+      kind,
+      variant,
       theme: doc.body.dataset.theme || "",
       title: doc.title || document.title,
       lang: doc.documentElement.lang || document.documentElement.lang,
@@ -363,6 +652,7 @@
 
   const applyRouteState = (route, themeOverride = "") => {
     body.dataset.routeKind = route.kind;
+    body.dataset.routeVariant = route.variant || route.kind;
 
     if (route.kind === "page") {
       body.dataset.theme = themeOverride || route.theme || "dark";
@@ -379,6 +669,11 @@
 
     const targetUrl = new URL(url, window.location.href);
     const currentUrl = new URL(window.location.href);
+
+    if (!shouldUseClientRouter(targetUrl)) {
+      window.location.href = targetUrl.href;
+      return;
+    }
 
     if (normalizePath(targetUrl.href) === normalizePath(currentUrl.href) && targetUrl.hash === currentUrl.hash) {
       return;
@@ -433,6 +728,8 @@
 
     setupPageTheme(incomingView);
     setupBackdropMotion();
+    setupHomeNavOutline(incomingView);
+    setupPeriodicTableEmbeds(incomingView);
 
     await wait(34);
     incomingView.classList.remove("is-entering");
@@ -464,6 +761,7 @@
 
     const targetUrl = new URL(link.href, window.location.href);
     if (!isInternalHtmlRoute(targetUrl)) return;
+    if (!shouldUseClientRouter(targetUrl)) return;
 
     event.preventDefault();
     swapRoute(targetUrl.href);
@@ -482,7 +780,8 @@
       return;
     }
 
-    if (event.target.closest(".page-wrap")) return;
+    if (body.dataset.routeVariant === "post") return;
+    if (event.target.closest(".page-wrap, .post-wrap")) return;
 
     event.preventDefault();
     swapRoute(homeRoute());
@@ -497,13 +796,17 @@
   if (initialView?.dataset.routeView === "page") {
     const initialTheme = body.dataset.theme === "light" ? "light" : body.dataset.theme || "dark";
     body.dataset.routeKind = "page";
+    body.dataset.routeVariant = initialView.classList.contains("route-view--post") ? "post" : "page";
     body.dataset.theme = initialTheme;
     initialView.dataset.theme = initialTheme;
   } else {
     body.dataset.routeKind = "home";
+    body.dataset.routeVariant = "home";
     body.removeAttribute("data-theme");
   }
 
   setupBackdropMotion();
+  setupHomeNavOutline(routeHost);
   setupPageTheme(routeHost);
+  setupPeriodicTableEmbeds(routeHost);
 })();

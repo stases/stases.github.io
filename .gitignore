@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local-only outputs
+test-results/
+temporary/
+
+# Local notes
+local_instructions.md
+
+# Offline/source-generation material not used by the static site runtime
+exports/
+scripts/subatomic_reps/
+assets/blog/crystalite/*.pdf
