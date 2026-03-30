@@ -654,46 +654,28 @@
       return;
     }
 
-    const linkRects = [...nav.querySelectorAll("a")]
-      .map((link) => link.getBoundingClientRect())
-      .filter((rect) => rect.width > 0 && rect.height > 0);
-
-    if (linkRects.length === 0) {
+    const navRect = nav.getBoundingClientRect();
+    if (navRect.width <= 0 || navRect.height <= 0) {
       outline.classList.remove("is-ready");
       return;
     }
 
     const landingRect = landing.getBoundingClientRect();
     const kickerRect = landing.querySelector(".home-kicker")?.getBoundingClientRect() || null;
-    const bounds = linkRects.reduce(
-      (acc, rect) => ({
-        left: Math.min(acc.left, rect.left),
-        top: Math.min(acc.top, rect.top),
-        right: Math.max(acc.right, rect.right),
-        bottom: Math.max(acc.bottom, rect.bottom),
-      }),
-      {
-        left: Number.POSITIVE_INFINITY,
-        top: Number.POSITIVE_INFINITY,
-        right: Number.NEGATIVE_INFINITY,
-        bottom: Number.NEGATIVE_INFINITY,
-      }
-    );
-
-    const paddingX = Math.max(22, Math.min(44, window.innerWidth * 0.03));
-    const paddingY = Math.max(18, Math.min(34, window.innerWidth * 0.022));
+    const paddingX = Math.max(16, Math.min(28, navRect.width * 0.045));
+    const basePaddingY = Math.max(10, Math.min(18, navRect.height * 0.18));
     const kickerGap = Math.max(
       HOME_KICKER_OUTLINE_GAP_MIN,
       Math.min(HOME_KICKER_OUTLINE_GAP_MAX, window.innerWidth * 0.008)
     );
-    const paddingTop = kickerRect
-      ? Math.max(0, Math.min(paddingY, bounds.top - kickerRect.bottom - kickerGap))
-      : paddingY;
-    const paddingBottom = paddingY;
-    const left = bounds.left - landingRect.left - paddingX;
-    const top = bounds.top - landingRect.top - paddingTop;
-    const width = bounds.right - bounds.left + paddingX * 2;
-    const height = bounds.bottom - bounds.top + paddingTop + paddingBottom;
+    const availableTopPadding = kickerRect
+      ? Math.max(0, navRect.top - kickerRect.bottom - kickerGap)
+      : basePaddingY;
+    const paddingY = Math.min(basePaddingY, availableTopPadding || basePaddingY);
+    const left = navRect.left - landingRect.left - paddingX;
+    const top = navRect.top - landingRect.top - paddingY;
+    const width = navRect.width + paddingX * 2;
+    const height = navRect.height + paddingY * 2;
 
     syncHomeNavOutlineStyle(outline);
     outline.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;

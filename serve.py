@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Tiny local dev server for the static site.
 
-This is only for local development. For hosting, deploy the /public folder
-(e.g. Cloudflare Pages).
+This repo serves directly from the project root.
 
 Usage:
-  python serve.py
+  python3 serve.py
 
 Optional:
-  PORT=5173 python serve.py
+  HOST=127.0.0.1 PORT=5173 python3 serve.py
 """
 
 from __future__ import annotations
@@ -19,17 +18,17 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PUBLIC_DIR = ROOT / "public"
+SITE_DIR = ROOT
 
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(PUBLIC_DIR), **kwargs)
+        super().__init__(*args, directory=str(SITE_DIR), **kwargs)
 
 
 def main() -> None:
-    if not PUBLIC_DIR.exists():
-        raise SystemExit(f"Missing directory: {PUBLIC_DIR}")
+    if not SITE_DIR.exists():
+        raise SystemExit(f"Missing directory: {SITE_DIR}")
 
     port = int(os.environ.get("PORT", "8000"))
     host = os.environ.get("HOST", "127.0.0.1")
@@ -37,7 +36,7 @@ def main() -> None:
     server = ThreadingHTTPServer((host, port), Handler)
     url = f"http://{host}:{port}/"
 
-    print(f"Serving: {PUBLIC_DIR}")
+    print(f"Serving: {SITE_DIR}")
     print(f"Open:    {url}")
 
     # Best-effort: open a browser tab.

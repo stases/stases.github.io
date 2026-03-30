@@ -315,6 +315,7 @@ body[data-route-kind="page"] .home-backdrop {
   justify-content: center;
   width: auto;
   padding: 0.18rem 0;
+  line-height: 1;
   color: rgba(244, 238, 248, 0.92);
   text-decoration: none;
   text-transform: uppercase;

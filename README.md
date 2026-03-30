@@ -12,32 +12,39 @@ Everything is plain **HTML + CSS + JS** so you can host it for free on **Cloudfl
 
 ## Local development (Python)
 
-You don't need a backend. For local dev, run a simple static file server.
+You don't need a backend. This site serves directly from the repository root, so
+run a simple static file server from the project root.
+
+If you're using Conda, activate your env first:
+
+```bash
+conda activate torch-gpu
+```
 
 ### Option A: run the included `serve.py`
 
 ```bash
 # From the project root:
-python serve.py
+python3 serve.py
 ```
 
 ### Option B: use Python's built-in server
 
 ```bash
 # From the project root:
-python -m http.server --directory public 8000
+python3 -m http.server 8000
 ```
 
 Then open:
 
 - http://localhost:8000
 
-If you're on Windows and `python` isn't found, try `py`:
+If you're on Windows and `python3` isn't found, try `py`:
 
 ```bash
 py serve.py
 # or
-py -m http.server --directory public 8000
+py -m http.server 8000
 ```
 
 ---
@@ -50,24 +57,24 @@ py -m http.server --directory public 8000
 
 - **Framework preset**: None
 - **Build command**: *(leave empty)*
-- **Build output directory**: `public`
+- **Build output directory**: `/`
 
-Cloudflare will publish the contents of `public/`.
+Cloudflare will publish the repository root.
 
 ---
 
 ## Files to edit
 
-- `public/index.html` — the oval + links.
-- `public/assets/styles.css` — all styling (colors, transitions, typography).
-- `public/assets/script.js` — click behavior + enabling links after the fade.
-- `public/*.html` — your content pages.
+- `index.html` — the oval + links.
+- `assets/styles.css` — all styling (colors, transitions, typography).
+- `assets/script.js` — click behavior + enabling links after the fade.
+- `*.html` / `blogposts/**/*.html` — your content pages.
 
 ---
 
 ## Customizing
 
-- Add/remove links: edit the `<a>` items inside `public/index.html`.
-- Change transition speed: edit `--transition-ms` in `public/assets/styles.css`.
-- Change oval size/aspect: edit `.monolith` sizing in `public/assets/styles.css`.
+- Add/remove links: edit the `<a>` items inside `index.html`.
+- Change transition speed: edit `--transition-ms` in `assets/styles.css`.
+- Change oval size/aspect: edit `.monolith` sizing in `assets/styles.css`.
 - Want a closer album-text feel? Drop in a typewriter-ish font (e.g. Courier Prime / IBM Plex Mono) and set it in `--type`.

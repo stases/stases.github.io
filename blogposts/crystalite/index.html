@@ -79,6 +79,17 @@
         display: block;
       }
 
+      .post-inline-video {
+        width: 100%;
+        display: block;
+        height: auto;
+        background: #0b1120;
+      }
+
+      .post-embed--video .post-embed__frame-shell {
+        min-height: 0;
+      }
+
       .post-hero {
         padding-bottom: clamp(22px, 4vh, 40px);
       }
@@ -164,10 +175,11 @@
         background: rgba(128, 128, 128, 0.08);
       }
 
-      .post-table__caption {
+      .route-view--post p.post-table__caption {
         margin: 0 0 2rem;
-        font-size: 0.95rem;
-        opacity: 0.9;
+        font-size: 0.94rem;
+        line-height: 1.64;
+        color: var(--post-muted);
       }
 
       .post-subheading {
@@ -252,7 +264,7 @@
 
             <section class="post-hero">
               <div>
-                <p class="post-kicker">March 18, 2026 / Blogpost</p>
+                <p class="post-kicker">Mar 30, 2026 / Blogpost</p>
                 <h1>Crystalite: A Lightweight Transformer for<br />Efficient Crystal Modeling</h1>
                 <p class="post-deck">
                   A blogpost for our paper on Crystalite, a lightweight diffusion Transformer for
@@ -265,7 +277,7 @@
               <aside class="post-sidebar" aria-label="Article metadata">
                 <div class="post-sidebar__block">
                   <p class="post-sidebar__label">Published</p>
-                  <p class="post-sidebar__value">March 18, 2026</p>
+                  <p class="post-sidebar__value">Mar 30, 2026</p>
                 </div>
                 <div class="post-sidebar__block">
                   <p class="post-sidebar__label">Topic</p>
@@ -292,7 +304,7 @@
                     </a>
                     <a class="post-legend__item" href="#results">
                       <span class="post-legend__eyebrow">Results</span>
-                      <span class="post-legend__title">Crystal structure prediction and de novo generation results</span>
+                      <span class="post-legend__title">Crystal structure prediction and <em>de novo</em> generation results</span>
                     </a>
                     <a class="post-legend__item" href="#conclusion">
                       <span class="post-legend__eyebrow">Conclusion</span>
@@ -325,6 +337,28 @@
                     objective is broad exploration rather than detailed validation of a small set of
                     structures.
                   </p>
+
+                  <figure class="post-embed post-embed--video">
+                    <div class="post-embed__frame-shell">
+                      <video
+                        class="post-inline-video"
+                        controls
+                        playsinline
+                        preload="metadata"
+                      >
+                        <source
+                          src="../../assets/blog/crystalite/SUN_generation.mp4"
+                          type="video/mp4"
+                        />
+                        Your browser does not support the embedded video.
+                      </video>
+                    </div>
+                    <figcaption class="post-embed__caption">
+                      Stable, unique, and novel crystal structures discovered by Crystalite. This
+                      visualization gives a qualitative preview of the kinds of candidates behind
+                      the quantitative S.U.N. results discussed later in the post.
+                    </figcaption>
+                  </figure>
 
                   <p>
                     Generative models are therefore attractive because they can learn to propose
@@ -377,13 +411,13 @@
                   </div>
 
                   <p>
-                    The key subtlety is that fractional coordinates are not Cartesian coordinates in
-                    disguise. A row of \( \mathbf{F} \) tells you where an atom sits inside the
-                    unit cell relative to the lattice basis, while \( \mathbf{L} \) tells you what
-                    that basis actually looks like in real space. The same fractional pattern can
-                    therefore correspond to very different Cartesian structures under different
-                    lattices, and real-space positions only make sense once \( \mathbf{F} \) and
-                    \( \mathbf{L} \) are interpreted together.
+                    An important observation is that fractional coordinates should not be regarded as
+                    Cartesian coordinates in another form. A row of \( \mathbf{F} \) specifies the
+                    position of an atom within the unit cell relative to the lattice basis, whereas
+                    \( \mathbf{L} \) specifies the lattice basis itself in real space. As a result,
+                    the same fractional arrangement can correspond to substantially different
+                    Cartesian structures under different lattices, and real-space positions are only
+                    well defined when \( \mathbf{F} \) and \( \mathbf{L} \) are considered jointly.
                   </p>
 
                   <figure class="post-embed post-embed--narrow post-embed--nudge-left">
@@ -411,11 +445,12 @@
                   <p>
                     Equivariant GNNs are well matched to this setting. They are designed to process
                     neighborhoods, distances, directions, and symmetry transformations in a
-                    controlled way. That is why they have achieved strong results in both crystal
-                    structure prediction and crystal generation. The cost is that the resulting
-                    models can become architecturally complex and slow at sampling time, when the
-                    denoiser must be evaluated repeatedly. Representative examples include CDVAE,
-                    DiffCSP, FlowMM, MatterGen, and OMatG
+                    controlled way, which has enabled strong results in both crystal structure
+                    prediction and crystal generation. At the same time, incorporating
+                    equivariance in this way can make the resulting models architecturally complex
+                    and relatively slow at sampling time, when the denoiser must be evaluated
+                    repeatedly. Representative
+                    examples include CDVAE, DiffCSP, FlowMM, MatterGen, and OMatG
                     <span class="post-cite">[<a href="#ref-5">5</a>, <a href="#ref-6">6</a>, <a href="#ref-7">7</a>, <a href="#ref-8">8</a>, <a href="#ref-9">9</a>]</span>.
                   </p>
 
@@ -439,18 +474,18 @@
                   </p>
 
                   <p>
-                    This matters especially in a diffusion model. The denoiser is asked to recover a
-                    continuous signal, yet the atom-type channel occupies a sparse corner of a
-                    high-dimensional simplex. At the same time, the representation contains no notion
-                    of chemically plausible substitutions.
+                    This matters especially when diffusion is formulated over a continuous atom-type
+                    signal rather than with an explicitly discrete diffusion process. In that
+                    setting, one-hot atom identity provides no notion of chemical proximity: nearby
+                    vectors in representation space do not correspond to chemically similar elements,
+                    and chemically plausible substitutions are not encoded in the representation.
                   </p>
 
                   <p>
                     Crystalite replaces one-hot atom identity with
                     <strong>Subatomic Tokenization</strong>, a compact descriptor built from periodic
-                    and electronic structure: period, group, block, and valence-shell occupancy. The
-                    periodic table is therefore not just visual context. It is the source of the
-                    token geometry itself.
+                    and electronic structure: period, group, block, and valence-shell occupancy.
+                    This gives the atom representation a more chemically meaningful structure.
                   </p>
 
                   <figure class="post-embed">
@@ -466,12 +501,9 @@
                     </div>
                     <figcaption class="post-embed__caption">
                       Subatomic Tokenization is based on the idea that nearby chemistry should remain
-                      nearby in representation space. The periodic table therefore becomes part of
-                      the modeling intuition, not merely an illustration.
+                      nearby in representation space. Here, the periodic table is useful because
+                      period, group, block, and valence structure directly inform the token design.
                     </figcaption>
-                    <a class="post-embed__link" href="../../periodic-table.html">
-                      Open the standalone periodic table
-                    </a>
                   </figure>
 
                   <p>
@@ -671,13 +703,13 @@
 
                 <section class="post-section" id="results">
                   <p class="post-meta">Results</p>
-                  <h2>Crystal structure prediction and de novo generation results</h2>
+                  <h2>Crystal structure prediction and <em>de novo</em> generation results</h2>
 
                   <p>
                     We evaluate Crystalite in two settings. In
                     <strong>crystal structure prediction (CSP)</strong>, the composition is known
                     and the model predicts the structure. In
-                    <strong>de novo generation</strong>, the model generates atom types,
+                    <strong><em>de novo</em> generation</strong>, the model generates atom types,
                     coordinates, and lattice jointly from noise.
                   </p>
 
@@ -782,17 +814,18 @@
 
                   <p>
                     This interpretation matches the ablations in the paper: GEM has only a modest
-                    effect on match rate, but it consistently improves structural accuracy. That is
-                    exactly the role one would expect from a geometry-aware attention bias.
+                    effect on match rate, but it consistently improves structural accuracy.
                   </p>
 
-                  <p class="post-subheading">De novo generation</p>
+                  <p class="post-subheading"><em>De novo</em> generation</p>
 
                   <p>
-                    The de novo generation setting is more nuanced. No single metric settles the
-                    comparison, because validity, novelty, uniqueness, and stability pull in
-                    different directions. Crystalite’s main result is therefore not dominance in
-                    every column, but a strong balance between discovery quality and efficiency.
+                    The <em>de novo</em> generation setting is more nuanced, because validity,
+                    novelty, uniqueness, and stability pull in different directions. For that
+                    reason, the most informative summary target is often <strong>S.U.N.</strong>,
+                    which rewards structures that are simultaneously stable, unique, and novel. On
+                    this benchmark, Crystalite achieves the strongest S.U.N. result while
+                    remaining substantially faster than competing baselines.
                   </p>
 
                   <div class="post-table-shell">
@@ -899,51 +932,23 @@
                     </table>
                   </div>
                   <p class="post-table__caption">
-                    Main de novo generation results. Crystalite achieves the highest S.U.N. score in
-                    this comparison while also being the fastest sampler by a large margin. The
-                    daggered timing denotes an optimized inference setting with FlashAttention and
-                    bfloat16.
-                  </p>
-
-                  <p>
-                    The most informative summary metric here is <strong>S.U.N.</strong>, the rate of
-                    structures that are simultaneously <strong>stable</strong>,
-                    <strong>unique</strong>, and <strong>novel</strong>. This is a useful way to
-                    summarize discovery performance because it makes the central trade-off explicit:
-                    a model can become more stable by becoming conservative, and more novel by
-                    becoming unreliable. What matters is the balance.
-                  </p>
-
-                  <figure class="post-embed">
-                    <img
-                      class="post-inline-image"
-                      src="../../assets/blog/crystalite/large-scale-generation.png"
-                      alt="Large-scale generation comparison between Crystalite and ADiT"
-                      loading="lazy"
-                    />
-                    <figcaption class="post-embed__caption">
-                      Some diversity metrics are properties of the generated set rather than a single
-                      sample. As the sampling budget grows, duplicates accumulate. Crystalite
-                      preserves uniqueness and unique-and-novel rate more effectively at scale.
-                    </figcaption>
-                  </figure>
-
-                  <p>
-                    This figure highlights an important evaluation point. Uniqueness and related
-                    metrics are not purely per-sample properties. They depend on how many crystals
-                    are generated in total. A strong generator should therefore not only perform well
-                    at 10,000 samples, but continue to discover distinct candidates as the sampling
-                    budget increases.
+                    Main <em>de novo</em> generation results on 10,000 generated crystals, with
+                    stability-related metrics estimated using NequIP. In this evaluation,
+                    Crystalite achieves the strongest S.U.N. result while also being the fastest
+                    sampler by a large margin. The daggered timing denotes an optimized inference
+                    setting with FlashAttention and bfloat16.
                   </p>
 
                   <p class="post-subheading">External benchmarking: LeMat GenBench</p>
 
                   <p>
-                    It is also useful to verify that the conclusions are not specific to a single
-                    internal evaluation pipeline. For that reason, we include the LeMat GenBench
-                    results below. This benchmark separates pre-relaxed and non-pre-relaxed models,
-                    so the two groups should be read within their own categories rather than pooled
-                    into a single ranking.
+                    We also evaluate Crystalite on LeMat GenBench
+                    <span class="post-cite">[<a href="#ref-12">12</a>]</span>, an external
+                    benchmark that is separate from our own evaluation. This provides an additional
+                    check that the main conclusions are not specific to a single benchmark. The
+                    pre-relaxed and non-pre-relaxed groups should be read within their own
+                    categories. On this benchmark, Crystalite achieves state-of-the-art results on most
+                    metrics, and particularly on SUN and MSUN.
                   </p>
 
                   <div class="post-table-shell">
@@ -1134,12 +1139,29 @@
                     stable rate, metastable rate, SUN, and MSUN.
                   </p>
 
+                  <p class="post-subheading">Large-scale generation</p>
+
+                  <figure class="post-embed">
+                    <img
+                      class="post-inline-image"
+                      src="../../assets/blog/crystalite/large-scale-generation.png"
+                      alt="Large-scale generation comparison between Crystalite and ADiT"
+                      loading="lazy"
+                    />
+                    <figcaption class="post-embed__caption">
+                      Some diversity metrics are properties of the generated set rather than a single
+                      sample. As the sampling budget grows, duplicates accumulate. Crystalite
+                      preserves uniqueness and unique-and-novel rate more effectively at scale.
+                    </figcaption>
+                  </figure>
+
                   <p>
-                    This external benchmark is useful because it shows that the main conclusions are
-                    not confined to one internal protocol. The strongest message is the same as in
-                    the main table: Crystalite is not merely fast, but also competitive under
-                    benchmark settings that emphasize stability and relaxation quality
-                    <span class="post-cite">[<a href="#ref-12">12</a>]</span>.
+                    A good generative model should not only produce plausible samples, but continue
+                    to generate diverse candidates as the sampling budget grows. Evaluating that
+                    behavior at scale is only practical when generation is fast enough to make such
+                    studies feasible in the first place. This is exactly where Crystalite is useful:
+                    it is fast enough for large-scale generation, while preserving uniqueness and
+                    unique-and-novel rate more effectively as more crystals are sampled.
                   </p>
                 </section>
 
@@ -1155,24 +1177,23 @@
                   </p>
 
                   <p>
-                    In practice, that gives a useful balance. The model remains easier to train,
-                    easier to sample from, and easier to extend than many geometry-heavy
-                    alternatives, while still reaching state-of-the-art crystal structure prediction
-                    results and strong de novo generation performance.
+                    In practice, that gives a useful balance: Crystalite remains easier to train,
+                    sample from, and extend than many geometry-heavy alternatives while still
+                    reaching state-of-the-art crystal structure prediction results and strong
+                    <em>de novo</em> generation performance. In the main generation comparison, it
+                    also
+                    achieves the highest S.U.N. score while sampling one to two orders of magnitude
+                    faster than leading GNN-based baselines, depending on the reference model and
+                    inference setting.
                   </p>
 
                   <p>
-                    This does not make equivariant GNNs obsolete. They remain a strong design choice,
-                    especially when one wants full geometric structure throughout the backbone.
-                    Crystalite instead makes the case for a different operating point: a model that
-                    balances speed, efficiency, and geometric expressivity rather than maximizing
-                    architectural complexity by default.
-                  </p>
-
-                  <p>
-                    For crystal modeling, that balance looks genuinely useful. Faster sampling,
-                    cleaner architectures, and carefully placed geometric priors are a practical
-                    combination for more scalable materials discovery workflows.
+                    That speed matters for more than runtime alone. Fast sampling makes conditional
+                    generation, guidance, and steering much easier to use in practice, because
+                    adding search loops or external constraints no longer multiplies an already
+                    expensive denoising cost. In that sense, Crystalite is not only an efficient
+                    generator, but also a more practical foundation for controllable and scalable
+                    materials discovery workflows.
                   </p>
                 </section>
 
