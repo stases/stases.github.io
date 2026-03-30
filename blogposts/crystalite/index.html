@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="A lighter introduction to Crystalite: a diffusion transformer for crystal generation and crystal structure prediction."
+      content="A focused introduction to Crystalite: a lightweight diffusion Transformer for crystal generation and crystal structure prediction."
     />
     <title>Crystalite: A Lightweight Transformer for Efficient Crystal Modeling</title>
 
@@ -79,14 +79,151 @@
         display: block;
       }
 
+      .post-hero {
+        padding-bottom: clamp(22px, 4vh, 40px);
+      }
+
+      .post-content {
+        padding-top: clamp(20px, 3.5vh, 36px);
+      }
+
+      .post-embed--narrow {
+        justify-items: center;
+      }
+
+      .post-embed--narrow .post-inline-image,
+      .post-embed--narrow .post-embed__caption {
+        width: min(75%, 920px);
+      }
+
+      .post-embed--nudge-left .post-inline-image {
+        transform: translateX(-2.5%);
+      }
+
       .post-prose mjx-container[jax="SVG"] {
         margin: 0 !important;
       }
 
+      .post-table-shell {
+        margin: 1.5rem 0 0.85rem;
+        border: 1px solid rgba(128, 128, 128, 0.22);
+        border-radius: 20px;
+        overflow-x: auto;
+        background: rgba(128, 128, 128, 0.05);
+      }
+
+      .post-table {
+        width: 100%;
+        min-width: 860px;
+        border-collapse: collapse;
+        font-size: 0.96rem;
+      }
+
+      .post-table--wide {
+        min-width: 1180px;
+      }
+
+      .post-table--xwide {
+        min-width: 1280px;
+      }
+
+      .post-table th,
+      .post-table td {
+        padding: 0.8rem 0.95rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+        vertical-align: middle;
+      }
+
+      .post-table thead th {
+        font-weight: 700;
+        background: rgba(128, 128, 128, 0.08);
+      }
+
+      .post-table th:first-child,
+      .post-table td:first-child {
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .post-table th:not(:first-child),
+      .post-table td:not(:first-child) {
+        text-align: right;
+      }
+
+      .post-table tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .post-table__group {
+        text-align: center !important;
+      }
+
+      .post-table__section-row td {
+        text-align: center !important;
+        font-weight: 700;
+        background: rgba(128, 128, 128, 0.08);
+      }
+
+      .post-table__caption {
+        margin: 0 0 2rem;
+        font-size: 0.95rem;
+        opacity: 0.9;
+      }
+
+      .post-subheading {
+        margin: 2.5rem 0 1rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .post-references {
+        padding-left: 1.35rem;
+        margin: 1.5rem 0 0;
+        display: grid;
+        gap: 0.95rem;
+      }
+
+      .post-references li {
+        margin: 0;
+        padding-bottom: 0.95rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+      }
+
+      .post-references li:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .post-cite {
+        white-space: nowrap;
+      }
+
       @media (max-width: 900px) {
+        .post-hero {
+          padding-bottom: 1.4rem;
+        }
+
+        .post-content {
+          padding-top: 1.25rem;
+        }
+
         .post-embed__frame-shell,
         .post-embed__frame {
           min-height: 460px;
+        }
+
+        .post-embed--narrow .post-inline-image,
+        .post-embed--narrow .post-embed__caption {
+          width: 100%;
+        }
+
+        .post-embed--nudge-left .post-inline-image {
+          transform: none;
+        }
+
+        .post-table {
+          font-size: 0.92rem;
         }
       }
     </style>
@@ -118,8 +255,8 @@
                 <p class="post-kicker">March 18, 2026 / Blogpost</p>
                 <h1>Crystalite: A Lightweight Transformer for<br />Efficient Crystal Modeling</h1>
                 <p class="post-deck">
-                  A simpler walk through Crystalite: why we built a lighter crystal model, how the
-                  periodic table becomes part of the representation, and what the benchmarks say.
+                  A blogpost for our paper on Crystalite, a lightweight diffusion Transformer for
+                  crystal generation and crystal structure prediction.
                 </p>
               </div>
             </section>
@@ -135,31 +272,35 @@
                   <p class="post-sidebar__value">Crystal modeling</p>
                 </div>
                 <div class="post-sidebar__block">
-                  <p class="post-sidebar__label">Legend</p>
+                  <p class="post-sidebar__label">Contents</p>
                   <nav class="post-legend" aria-label="Article sections">
                     <a class="post-legend__item" href="#introduction">
                       <span class="post-legend__eyebrow">Introduction</span>
-                      <span class="post-legend__title">Why this problem needs more than raw scale</span>
+                      <span class="post-legend__title">Generative modeling of crystals</span>
+                    </a>
+                    <a class="post-legend__item" href="#current-practice">
+                      <span class="post-legend__eyebrow">Background</span>
+                      <span class="post-legend__title">Equivariant GNNs for crystal modeling</span>
                     </a>
                     <a class="post-legend__item" href="#interactive-periodic-table">
                       <span class="post-legend__eyebrow">Representation</span>
-                      <span class="post-legend__title">The periodic table is part of the model</span>
+                      <span class="post-legend__title">Chemistry-based atom encoding</span>
                     </a>
                     <a class="post-legend__item" href="#method">
                       <span class="post-legend__eyebrow">Method</span>
-                      <span class="post-legend__title">A compact diffusion transformer with geometric attention</span>
+                      <span class="post-legend__title">Geometry-aware attention with GEM</span>
                     </a>
                     <a class="post-legend__item" href="#results">
                       <span class="post-legend__eyebrow">Results</span>
-                      <span class="post-legend__title">State-of-the-art CSP and strong de novo generation</span>
-                    </a>
-                    <a class="post-legend__item" href="#discussion">
-                      <span class="post-legend__eyebrow">Discussion</span>
-                      <span class="post-legend__title">What a lighter model buys us</span>
+                      <span class="post-legend__title">Crystal structure prediction and de novo generation results</span>
                     </a>
                     <a class="post-legend__item" href="#conclusion">
                       <span class="post-legend__eyebrow">Conclusion</span>
-                      <span class="post-legend__title">Simple is not the same as naive</span>
+                      <span class="post-legend__title">Balancing efficiency and expressivity</span>
+                    </a>
+                    <a class="post-legend__item" href="#references">
+                      <span class="post-legend__eyebrow">References</span>
+                      <span class="post-legend__title">Selected references</span>
                     </a>
                   </nav>
                 </div>
@@ -168,53 +309,148 @@
               <div class="post-prose">
                 <section class="post-section" id="introduction">
                   <p class="post-meta">Introduction</p>
-                  <h2></h2>
+                  <h2>Generative modeling of crystals</h2>
+
                   <p>
-                    Discovering new crystalline materials is hard for a simple reason: the space of
-                    possible compositions and structures is huge, but only a small fraction of them
-                    are actually good candidates. In principle, expensive first-principles
-                    calculations can test whether a material makes sense. In practice, that quickly
-                    becomes too slow if the goal is broad exploration.
+                    Discovering new crystalline materials remains a difficult search problem and a
+                    central challenge in modern materials discovery
+                    <span class="post-cite">[<a href="#ref-1">1</a>]</span>.
+                    The number of possible compositions and structures is enormous, while only a
+                    small fraction of candidates are thermodynamically competitive. Traditional
+                    structure-search strategies such as AIRSS and evolutionary crystal structure
+                    prediction can explore this space systematically
+                    <span class="post-cite">[<a href="#ref-2">2</a>, <a href="#ref-3">3</a>, <a href="#ref-4">4</a>]</span>.
+                    In principle, first-principles calculations can assess whether a proposed
+                    material is meaningful. In practice, this quickly becomes too costly if the
+                    objective is broad exploration rather than detailed validation of a small set of
+                    structures.
                   </p>
+
                   <p>
-                    This is why generative models are attractive. Instead of checking candidates one
-                    by one, we train a model to propose plausible crystals directly. But crystal
-                    generation is also a geometric problem. Atoms live inside a periodic lattice,
-                    distances wrap around the unit cell, and small geometric errors matter. Because
-                    of that, many strong models rely on heavy equivariant graph neural networks.
+                    Generative models are therefore attractive because they can learn to propose
+                    candidate crystals directly from data. However, crystal generation is not simply
+                    a matter of predicting discrete atom labels. Atoms occupy positions inside a
+                    periodic lattice, distances wrap across unit-cell boundaries, and small geometric
+                    errors can change the physical plausibility of a structure. This is the main
+                    reason why much of the recent literature has relied on geometry-aware and often
+                    equivariant graph neural networks
+                    <span class="post-cite">[<a href="#ref-5">5</a>, <a href="#ref-6">6</a>, <a href="#ref-8">8</a>, <a href="#ref-9">9</a>, <a href="#ref-10">10</a>]</span>.
                   </p>
+
                   <p>
-                    Crystalite asks whether we really need all of that machinery. Can a smaller
-                    diffusion Transformer still work if we give it the right inductive bias? The
-                    answer seems to be yes. The trick is not to ignore geometry, but to place it
-                    carefully: in the representation, in the lattice parameterization, and directly
-                    inside attention.
+                    Crystalite begins from a narrower question: how much of this geometric structure
+                    must be built into the backbone itself? Put differently, can a diffusion
+                    Transformer remain competitive if the inductive bias is placed more carefully?
+                    Recent diffusion-transformer results suggest that lighter backbones can indeed be
+                    competitive when the representation and geometry are handled well
+                    <span class="post-cite">[<a href="#ref-10">10</a>, <a href="#ref-11">11</a>]</span>.
                   </p>
+
                   <div class="post-note">
-                    This post is the lighter version of the paper. I am skipping many implementation
-                    details and focusing on the core ideas: how the representation works, where the
-                    geometry enters, and what the model achieves.
+                    In this post, we focus on two design choices that define Crystalite. The first is
+                    a chemically structured atom representation. The second is a lightweight way of
+                    injecting periodic geometry into attention without replacing the Transformer with
+                    a fully geometry-specific backbone.
                   </div>
+                </section>
+
+                <section class="post-section" id="current-practice">
+                  <p class="post-meta">Background</p>
+                  <h2>Equivariant GNNs for crystal modeling</h2>
+
+                  <p>
+                    A crystal is naturally described by three coupled objects: atom identities
+                    \( \mathbf{A} \), fractional coordinates \( \mathbf{F} \), and lattice
+                    geometry \( \mathbf{L} \):
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \mathcal{C} = (\mathbf{A}, \mathbf{F}, \mathbf{L}),
+                    \qquad
+                    \mathbf{A} \in \{0,1\}^{N \times N_Z},
+                    \quad
+                    \mathbf{F} \in [0,1)^{N \times 3},
+                    \quad
+                    \mathbf{L} \in \mathbb{R}^{3 \times 3}.
+                    $$
+                  </div>
+
+                  <p>
+                    The key subtlety is that fractional coordinates are not Cartesian coordinates in
+                    disguise. A row of \( \mathbf{F} \) tells you where an atom sits inside the
+                    unit cell relative to the lattice basis, while \( \mathbf{L} \) tells you what
+                    that basis actually looks like in real space. The same fractional pattern can
+                    therefore correspond to very different Cartesian structures under different
+                    lattices, and real-space positions only make sense once \( \mathbf{F} \) and
+                    \( \mathbf{L} \) are interpreted together.
+                  </p>
+
+                  <figure class="post-embed post-embed--narrow post-embed--nudge-left">
+                    <img
+                      class="post-inline-image"
+                      src="../../assets/blog/crystalite/frac-coords.png"
+                      alt="Comparison between crystal positions in real space and fractional coordinates inside a unit cell"
+                      loading="lazy"
+                    />
+                    <figcaption class="post-embed__caption">
+                      Fractional coordinates live inside the unit cell, while real-space positions
+                      are obtained only after the lattice basis is applied. This is why the
+                      coordinate channel and the lattice channel are inseparable in a crystal model.
+                    </figcaption>
+                  </figure>
+
+                  <p>
+                    This representation immediately explains why the problem is specialized. The
+                    unit cell is repeated periodically in all directions. Local environments matter,
+                    but only through the lattice that defines how the crystal repeats in real space.
+                    Geometric relations must be computed under the minimum-image convention rather
+                    than inside an isolated box.
+                  </p>
+
+                  <p>
+                    Equivariant GNNs are well matched to this setting. They are designed to process
+                    neighborhoods, distances, directions, and symmetry transformations in a
+                    controlled way. That is why they have achieved strong results in both crystal
+                    structure prediction and crystal generation. The cost is that the resulting
+                    models can become architecturally complex and slow at sampling time, when the
+                    denoiser must be evaluated repeatedly. Representative examples include CDVAE,
+                    DiffCSP, FlowMM, MatterGen, and OMatG
+                    <span class="post-cite">[<a href="#ref-5">5</a>, <a href="#ref-6">6</a>, <a href="#ref-7">7</a>, <a href="#ref-8">8</a>, <a href="#ref-9">9</a>]</span>.
+                  </p>
+
+                  <p>
+                    Crystalite does not argue that geometry can be ignored. Rather, it asks whether
+                    geometry can be introduced in a more economical way. The model retains a
+                    standard diffusion Transformer backbone and concentrates its crystal-specific
+                    structure in the representation and the attention mechanism.
+                  </p>
                 </section>
 
                 <section class="post-section" id="interactive-periodic-table">
                   <p class="post-meta">Representation</p>
-                  <h2>Subatomic Tokenization</h2>
+                  <h2>Chemistry-based atom encoding</h2>
+
                   <p>
-                    One of the main ideas in Crystalite is that atom identity should not be treated
-                    as a completely disconnected label. In a standard one-hot encoding, sodium is no
-                    closer to lithium than it is to xenon. Chemically, that is a poor fit. We
-                    instead use a compact chemically structured atom representation, and the
-                    interactive periodic table below is the best way to understand the intuition
-                    behind it.
+                    The first modification concerns atom identity. In many crystal generators, atom
+                    types are represented by one-hot vectors. This is convenient, but chemically it
+                    is a poor geometry: every element is orthogonal to every other element. Sodium is
+                    no closer to lithium than it is to xenon.
                   </p>
+
                   <p>
-                    Rather than showing a separate static tokenization figure, I want this embed to
-                    be the centerpiece of the explanation. The representation is built from
-                    properties that already live on the periodic table, such as period, group,
-                    block, and valence-shell information. That gives the diffusion model a smoother
-                    chemical space and makes atom prediction less brittle than recovering sparse
-                    one-hot vectors.
+                    This matters especially in a diffusion model. The denoiser is asked to recover a
+                    continuous signal, yet the atom-type channel occupies a sparse corner of a
+                    high-dimensional simplex. At the same time, the representation contains no notion
+                    of chemically plausible substitutions.
+                  </p>
+
+                  <p>
+                    Crystalite replaces one-hot atom identity with
+                    <strong>Subatomic Tokenization</strong>, a compact descriptor built from periodic
+                    and electronic structure: period, group, block, and valence-shell occupancy. The
+                    periodic table is therefore not just visual context. It is the source of the
+                    token geometry itself.
                   </p>
 
                   <figure class="post-embed">
@@ -229,9 +465,9 @@
                       ></iframe>
                     </div>
                     <figcaption class="post-embed__caption">
-                      The interactive periodic table is not just decoration here. It is the main
-                      intuition for how Crystalite represents atom types: nearby chemistry should
-                      stay nearby in the model as well.
+                      Subatomic Tokenization is based on the idea that nearby chemistry should remain
+                      nearby in representation space. The periodic table therefore becomes part of
+                      the modeling intuition, not merely an illustration.
                     </figcaption>
                     <a class="post-embed__link" href="../../periodic-table.html">
                       Open the standalone periodic table
@@ -239,10 +475,30 @@
                   </figure>
 
                   <p>
-                    In the paper, atom types are ultimately handled through continuous vectors
-                    rather than one-hot identities. For the blogpost, the important part is the
-                    idea: the model does not start from “element as arbitrary ID,” but from “element
-                    as chemically structured object.”
+                    In a simplified form, the token for element \(k\) can be written as
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \mathbf{h}_k =
+                    \big[
+                    \mathrm{onehot}(r_k),
+                    \mathrm{onehot}(g_k),
+                    \mathrm{onehot}(b_k),
+                    s_k/2,\,
+                    p_k/6,\,
+                    d_k/10,\,
+                    f_k/14
+                    \big].
+                    $$
+                  </div>
+
+                  <p>
+                    These descriptors are standardized, balanced across feature groups, optionally
+                    PCA-compressed, and then treated as continuous atom tokens. During sampling, a
+                    predicted token is decoded back to a valid element by nearest-token matching.
+                    This makes the denoising problem better aligned with chemical structure: nearby
+                    errors in token space correspond more naturally to chemically related species.
                   </p>
 
                   <div class="post-math">
@@ -258,20 +514,68 @@
                   </div>
 
                   <p>
-                    Here \( \mathbf{H} \) is the continuous atom-type channel, \( \mathbf{F} \)
-                    contains the fractional coordinates, and \( \mathbf{y} \) is a compact latent
-                    description of the lattice. Those three parts are denoised jointly.
+                    These are the three continuous channels denoised jointly by the model: atom
+                    tokens \( \mathbf{H} \), fractional coordinates \( \mathbf{F} \), and a compact
+                    latent description of the lattice \( \mathbf{y} \).
                   </p>
                 </section>
 
                 <section class="post-section" id="method">
                   <p class="post-meta">Method</p>
-                  <h2>A compact diffusion transformer with geometric attention</h2>
+                  <h2>Geometry-aware attention with GEM</h2>
+
                   <p>
-                    The backbone of Crystalite is intentionally simple. Each atom becomes a token,
-                    and the lattice becomes one additional global token. The model then processes
-                    this sequence with a standard Transformer trunk conditioned on the diffusion
-                    noise level.
+                    The second key design choice concerns geometry. Crystals are periodic objects, so
+                    geometric quantities should respect the torus structure of fractional
+                    coordinates. The subtle point is that Crystalite uses two closely related
+                    constructions here: a wrapped fractional residual for the coordinate loss, and a
+                    metric-aware periodic-image search for the geometry-aware attention module
+                    introduced below.
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \boldsymbol{\delta}^{\mathrm{wrap}}_{ij}
+                    =
+                    \mathrm{wrap}(\mathbf{f}_i - \mathbf{f}_j),
+                    \qquad
+                    \mathrm{wrap}(\mathbf{u})
+                    =
+                    \mathbf{u} - \mathrm{round}(\mathbf{u}),
+                    \qquad
+                    d^{\mathrm{wrap}}_{ij}
+                    =
+                    \left\| \boldsymbol{\delta}^{\mathrm{wrap}}_{ij} \mathbf{L} \right\|_2.
+                    $$
+                  </div>
+
+                  <p>
+                    This wrapped residual is the right object for the coordinate loss because the
+                    model predicts fractional coordinates directly. For the geometry-aware
+                    attention bias, the goal is slightly different: we want the shortest periodic
+                    displacement under the lattice metric, not just a componentwise wrap. In
+                    practice, the model searches over a small set of nearby periodic images and
+                    keeps the one with the smallest real-space norm:
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \Delta \mathbf{f}_{ij}^{\star}
+                    =
+                    \arg\min_{\mathbf{r} \in \Omega_R}
+                    \left\|
+                    \left( \mathbf{f}_i - \mathbf{f}_j + \mathbf{r} \right)\mathbf{L}
+                    \right\|_2.
+                    $$
+                  </div>
+
+                  <p>
+                    For orthogonal cells these two notions coincide, but for skewed lattices they do
+                    not have to. That is why the paper distinguishes between wrapped fractional
+                    residuals in the loss and metric-aware minimum-image geometry in the attention
+                    module. The backbone itself is still intentionally simple: one token per atom,
+                    one additional global token for the lattice, and a standard
+                    diffusion-conditioned Transformer trunk.
                   </p>
 
                   <div class="post-math">
@@ -282,28 +586,6 @@
                     $$
                   </div>
 
-                  <p>
-                    This already gives the network a clean decomposition: one token per atom, plus
-                    one token for the global cell geometry. To keep the lattice stable during
-                    diffusion, the paper uses a lower-triangular latent parameterization:
-                  </p>
-
-                  <div class="post-math">
-                    $$
-                    \mathbf{L}(\mathbf{y}) =
-                    \begin{bmatrix}
-                    e^{y_1} &amp; 0 &amp; 0 \\
-                    y_2 &amp; e^{y_3} &amp; 0 \\
-                    y_4 &amp; y_5 &amp; e^{y_6}
-                    \end{bmatrix}.
-                    $$
-                  </div>
-
-                  <p>
-                    This is a small design choice, but it matters. It keeps the parameterization
-                    unconstrained while ensuring the diagonal terms stay positive.
-                  </p>
-
                   <figure class="post-embed">
                     <img
                       class="post-inline-image"
@@ -312,32 +594,53 @@
                       loading="lazy"
                     />
                     <figcaption class="post-embed__caption">
-                      Crystalite keeps the architecture compact: atom tokens, one lattice token, a
-                      diffusion-conditioned Transformer trunk, and lightweight heads for the three
-                      prediction channels.
+                      Crystalite keeps the architecture compact: one token per atom, one lattice
+                      token, a diffusion-conditioned Transformer trunk, and lightweight heads for
+                      the atom, coordinate, and lattice channels.
                     </figcaption>
                   </figure>
 
                   <p>
-                    The main extra ingredient is the
-                    <strong>Geometric Enhancement Module (GEM)</strong>. Rather than replacing the
-                    Transformer with a much heavier geometry-specific backbone, GEM adds periodic
-                    pairwise geometric information directly to the attention logits.
+                    This gives the model a clean decomposition between local atomic information and
+                    global cell information. The lattice is parameterized through a
+                    lower-triangular latent, which keeps the representation unconstrained while
+                    ensuring positive diagonal entries:
                   </p>
 
                   <div class="post-math">
                     $$
-                    A_{\mathrm{GEM}} = \frac{QK^\top}{\sqrt{d}} + B_{\mathrm{geom}}.
+                    \mathbf{L}(\mathbf{y}) =
+                    \begin{bmatrix}
+                    e^{y_1} & 0 & 0 \\
+                    y_2 & e^{y_3} & 0 \\
+                    y_4 & y_5 & e^{y_6}
+                    \end{bmatrix}.
                     $$
                   </div>
 
                   <p>
-                    In plain language: the model still uses ordinary self-attention, but the scores
-                    are nudged using crystal geometry under periodic boundary conditions. So the
-                    backbone stays simple, while the attention becomes much more crystal-aware.
+                    The geometry-specific piece of this backbone is the
+                    <strong>Geometric Enhancement Module (GEM)</strong>. GEM computes periodic
+                    pairwise features from atom positions and the lattice, then feeds them into
+                    attention as a bias rather than replacing the Transformer with a heavier
+                    message-passing architecture.
                   </p>
 
-                  <figure class="post-embed">
+                  <p>
+                    Concretely, GEM adds a geometry-dependent bias directly to the attention logits:
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    A_{\mathrm{geom}}
+                    =
+                    \frac{QK^\top}{\sqrt{d}}
+                    +
+                    B_{\mathrm{geom}}.
+                    $$
+                  </div>
+
+                  <figure class="post-embed post-embed--narrow">
                     <img
                       class="post-inline-image"
                       src="../../assets/blog/crystalite/gem-module.png"
@@ -345,144 +648,270 @@
                       loading="lazy"
                     />
                     <figcaption class="post-embed__caption">
-                      GEM injects minimum-image geometry directly into attention. It is a light way
-                      to make a Transformer respect periodic structure without full equivariant
-                      message passing.
+                      GEM computes minimum-image pair geometry under periodic boundary conditions and
+                      converts it into an additive attention bias. Geometry therefore enters the
+                      model directly at the level of token interactions.
                     </figcaption>
                   </figure>
 
                   <p>
-                    Training is then just diffusion over the three channels, with a weighted loss
-                    that combines atom-type, coordinate, and lattice denoising:
+                    The bias term \(B_{\mathrm{geom}}\) is built from periodic pairwise geometry:
+                    metric-aware minimum-image displacements, normalized distances, Fourier or
+                    radial features, and a compact lattice descriptor. The resulting attention is
+                    still standard self-attention, but it is informed by crystal geometry at the
+                    point where token interactions are decided.
                   </p>
 
-                  <div class="post-math">
-                    $$
-                    \mathcal{L}
-                    =
-                    \lambda_H \mathcal{L}_H
-                    +
-                    \lambda_F \mathcal{L}_F
-                    +
-                    \lambda_{\mathrm{lat}} \mathcal{L}_{\mathrm{lat}}.
-                    $$
-                  </div>
-
-                  <div class="post-math">
-                    $$
-                    \mathcal{L}_F
-                    =
-                    \frac{1}{N}
-                    \sum_{i=1}^{N}
-                    w_F(\sigma)
-                    \left\|
-                    \mathrm{wrap}\!\left(\hat{\mathbf{f}}_i - \mathbf{f}_i\right)
-                    \right\|_2^2.
-                    $$
-                  </div>
-
                   <p>
-                    The coordinate term uses wrapped residuals in fractional space, which is exactly
-                    what you want for periodic data.
+                    This is the central modeling idea. Crystalite does not attempt to remove
+                    geometric inductive bias. Instead, it introduces a softer and more modular form
+                    of that bias inside the attention mechanism.
                   </p>
                 </section>
 
                 <section class="post-section" id="results">
                   <p class="post-meta">Results</p>
-                  <h2>State-of-the-art CSP and strong <em>de novo</em> generation</h2>
+                  <h2>Crystal structure prediction and de novo generation results</h2>
+
                   <p>
                     We evaluate Crystalite in two settings. In
                     <strong>crystal structure prediction (CSP)</strong>, the composition is known
-                    and the model predicts the structure. In <strong>de novo generation</strong>,
-                    the model generates atom types, coordinates, and lattice from scratch.
+                    and the model predicts the structure. In
+                    <strong>de novo generation</strong>, the model generates atom types,
+                    coordinates, and lattice jointly from noise.
                   </p>
+
+                  <p class="post-subheading">Crystal structure prediction</p>
 
                   <p>
-                    The CSP story is very clean: Crystalite is best across all three benchmarks in
-                    both match rate and RMSE. What I find especially striking is the RMSE. The model
-                    is not only recovering the right structure more often, it is recovering the
-                    geometry more accurately.
+                    The CSP results are particularly direct. Across the reported benchmarks,
+                    Crystalite achieves the strongest results in both match rate and RMSE. The RMSE
+                    improvements are especially notable, because they suggest better geometric
+                    refinement rather than merely better recovery of the correct structural mode.
                   </p>
 
-                  <div class="post-math">
-                    $$
-                    \begin{array}{lcccccc}
-                    \textbf{Model}
-                    &amp; \textbf{MP-20 MR} \uparrow
-                    &amp; \textbf{MP-20 RMSE} \downarrow
-                    &amp; \textbf{MPTS-52 MR} \uparrow
-                    &amp; \textbf{MPTS-52 RMSE} \downarrow
-                    &amp; \textbf{Alex-MP-20 MR} \uparrow
-                    &amp; \textbf{Alex-MP-20 RMSE} \downarrow
-                    \\
-                    \hline
-                    \text{CDVAE}      &amp; 33.90 &amp; 0.1045 &amp; 5.34  &amp; 0.2106 &amp; --    &amp; -- \\
-                    \text{DiffCSP}    &amp; 51.49 &amp; 0.0631 &amp; 12.19 &amp; 0.1786 &amp; --    &amp; -- \\
-                    \text{FlowMM}     &amp; 61.39 &amp; 0.0566 &amp; 17.54 &amp; 0.1726 &amp; --    &amp; -- \\
-                    \text{CrystalFlow}&amp; 62.02 &amp; 0.0710 &amp; 22.71 &amp; 0.1548 &amp; --    &amp; -- \\
-                    \text{KLDM}       &amp; 65.83 &amp; 0.0517 &amp; 23.93 &amp; 0.1276 &amp; --    &amp; -- \\
-                    \text{OMatG}      &amp; 63.75 &amp; 0.0720 &amp; 25.15 &amp; 0.1931 &amp; 64.71 &amp; 0.1251 \\
-                    \mathbf{Crystalite}
-                                      &amp; \mathbf{66.05} &amp; \mathbf{0.0329}
-                                      &amp; \mathbf{31.49} &amp; \mathbf{0.0701}
-                                      &amp; \mathbf{67.52} &amp; \mathbf{0.0335}
-                    \end{array}
-                    $$
+                  <div class="post-table-shell">
+                    <table class="post-table" aria-label="Crystal structure prediction results">
+                      <thead>
+                        <tr>
+                          <th rowspan="2">Model</th>
+                          <th class="post-table__group" colspan="2">MP-20</th>
+                          <th class="post-table__group" colspan="2">MPTS-52</th>
+                          <th class="post-table__group" colspan="2">Alex-MP-20</th>
+                        </tr>
+                        <tr>
+                          <th>MR ↑</th>
+                          <th>RMSE ↓</th>
+                          <th>MR ↑</th>
+                          <th>RMSE ↓</th>
+                          <th>MR ↑</th>
+                          <th>RMSE ↓</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>CDVAE</td>
+                          <td>33.90</td>
+                          <td>0.1045</td>
+                          <td>5.34</td>
+                          <td>0.2106</td>
+                          <td>--</td>
+                          <td>--</td>
+                        </tr>
+                        <tr>
+                          <td>DiffCSP</td>
+                          <td>51.49</td>
+                          <td>0.0631</td>
+                          <td>12.19</td>
+                          <td>0.1786</td>
+                          <td>--</td>
+                          <td>--</td>
+                        </tr>
+                        <tr>
+                          <td>FlowMM</td>
+                          <td>61.39</td>
+                          <td>0.0566</td>
+                          <td>17.54</td>
+                          <td>0.1726</td>
+                          <td>--</td>
+                          <td>--</td>
+                        </tr>
+                        <tr>
+                          <td>CrystalFlow</td>
+                          <td>62.02</td>
+                          <td>0.0710</td>
+                          <td>22.71</td>
+                          <td>0.1548</td>
+                          <td>--</td>
+                          <td>--</td>
+                        </tr>
+                        <tr>
+                          <td>KLDM</td>
+                          <td>65.83</td>
+                          <td>0.0517</td>
+                          <td>23.93</td>
+                          <td>0.1276</td>
+                          <td>--</td>
+                          <td>--</td>
+                        </tr>
+                        <tr>
+                          <td>OMatG</td>
+                          <td>63.75</td>
+                          <td>0.0720</td>
+                          <td>25.15</td>
+                          <td>0.1931</td>
+                          <td>64.71</td>
+                          <td>0.1251</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Crystalite</strong></td>
+                          <td><strong>66.05</strong></td>
+                          <td><strong>0.0329</strong></td>
+                          <td><strong>31.49</strong></td>
+                          <td><strong>0.0701</strong></td>
+                          <td><strong>67.52</strong></td>
+                          <td><strong>0.0335</strong></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-
-                  <p>
-                    In our experiments, GEM has only a small effect on whether the model lands in
-                    the correct structural mode, but it consistently improves geometric refinement.
-                    In practice, that shows up as a roughly twenty percent reduction in RMSE across
-                    experiments.
+                  <p class="post-table__caption">
+                    CSP results across the three reported benchmarks. The strongest gains appear in
+                    RMSE, which is consistent with GEM primarily improving geometric refinement.
                   </p>
 
                   <p>
-                    For <em>de novo</em> generation, the picture is more nuanced. There is no single
-                    metric that settles everything, because validity, novelty, uniqueness, and
-                    stability pull in different directions. Crystalite’s main strength is that it
-                    hits a very strong compromise point instead of over-optimizing one axis at the
-                    expense of the others.
+                    This interpretation matches the ablations in the paper: GEM has only a modest
+                    effect on match rate, but it consistently improves structural accuracy. That is
+                    exactly the role one would expect from a geometry-aware attention bias.
                   </p>
 
-                  <div class="post-math">
-                    $$
-                    \begin{array}{lcccccccccc}
-                    \textbf{Model}
-                    &amp; \textbf{Struct.\ Val.} \uparrow
-                    &amp; \textbf{Comp.\ Val.} \uparrow
-                    &amp; \textbf{Unique} \uparrow
-                    &amp; \textbf{Novel} \uparrow
-                    &amp; \textbf{U.N.} \uparrow
-                    &amp; \textbf{Stable} \uparrow
-                    &amp; \textbf{S.U.N.} \uparrow
-                    &amp; \textbf{wdist-}\rho \downarrow
-                    &amp; \textbf{wdist N-ary} \downarrow
-                    &amp; \textbf{Time/1k} \downarrow
-                    \\
-                    \hline
-                    \text{FlowMM}
-                    &amp; 93.03 &amp; 83.15 &amp; 97.44 &amp; 85.00 &amp; 83.99 &amp; 46.05 &amp; 31.64 &amp; 1.389 &amp; \mathbf{0.075} &amp; -- \\
-                    \text{CrystalDiT}
-                    &amp; 77.82 &amp; 67.28 &amp; 90.88 &amp; 59.33 &amp; 56.86 &amp; \mathbf{83.41} &amp; 41.70 &amp; 0.202 &amp; 0.171 &amp; -- \\
-                    \text{DiffCSP}
-                    &amp; \mathbf{99.93} &amp; 82.10 &amp; 96.90 &amp; 89.53 &amp; 87.89 &amp; 50.28 &amp; 38.60 &amp; 0.192 &amp; 0.344 &amp; -- \\
-                    \text{MatterGen}
-                    &amp; 99.78 &amp; 83.72 &amp; \mathbf{98.10} &amp; \mathbf{91.14} &amp; \mathbf{90.26} &amp; 51.70 &amp; 42.29 &amp; 0.088 &amp; 0.184 &amp; -- \\
-                    \text{ADiT}
-                    &amp; 99.52 &amp; \mathbf{90.15} &amp; 90.25 &amp; 59.80 &amp; 56.91 &amp; 76.90 &amp; 36.76 &amp; 0.231 &amp; 0.089 &amp; -- \\
-                    \mathbf{Crystalite}
-                    &amp; 99.61 &amp; 81.94 &amp; 95.33 &amp; 79.15 &amp; 77.12 &amp; 70.97 &amp; \mathbf{48.55} &amp; \mathbf{0.046} &amp; 0.125 &amp; -- \\
-                    \end{array}
-                    $$
+                  <p class="post-subheading">De novo generation</p>
+
+                  <p>
+                    The de novo generation setting is more nuanced. No single metric settles the
+                    comparison, because validity, novelty, uniqueness, and stability pull in
+                    different directions. Crystalite’s main result is therefore not dominance in
+                    every column, but a strong balance between discovery quality and efficiency.
+                  </p>
+
+                  <div class="post-table-shell">
+                    <table class="post-table post-table--wide" aria-label="De novo generation results">
+                      <thead>
+                        <tr>
+                          <th rowspan="2">Model</th>
+                          <th class="post-table__group" colspan="5">Quality and Diversity</th>
+                          <th class="post-table__group" colspan="5">Stability, Distribution, and Speed</th>
+                        </tr>
+                        <tr>
+                          <th>Struct. Val. ↑</th>
+                          <th>Comp. Val. ↑</th>
+                          <th>Unique ↑</th>
+                          <th>Novel ↑</th>
+                          <th>U.N. ↑</th>
+                          <th>Stable ↑</th>
+                          <th>S.U.N. ↑</th>
+                          <th>wdist-&rho; ↓</th>
+                          <th>wdist N-ary ↓</th>
+                          <th>Time / 1k ↓</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>FlowMM</td>
+                          <td>93.03</td>
+                          <td>83.15</td>
+                          <td>97.44</td>
+                          <td>85.00</td>
+                          <td>83.99</td>
+                          <td>46.05</td>
+                          <td>31.64</td>
+                          <td>1.389</td>
+                          <td>0.075</td>
+                          <td>1560</td>
+                        </tr>
+                        <tr>
+                          <td>CrystalDiT</td>
+                          <td>77.82</td>
+                          <td>67.28</td>
+                          <td>90.88</td>
+                          <td>59.33</td>
+                          <td>56.86</td>
+                          <td>83.41</td>
+                          <td>41.70</td>
+                          <td>0.202</td>
+                          <td>0.171</td>
+                          <td>73.72</td>
+                        </tr>
+                        <tr>
+                          <td>DiffCSP</td>
+                          <td>99.93</td>
+                          <td>82.10</td>
+                          <td>96.90</td>
+                          <td>89.53</td>
+                          <td>87.89</td>
+                          <td>50.28</td>
+                          <td>38.60</td>
+                          <td>0.192</td>
+                          <td>0.344</td>
+                          <td>237</td>
+                        </tr>
+                        <tr>
+                          <td>MatterGen</td>
+                          <td>99.78</td>
+                          <td>83.72</td>
+                          <td>98.10</td>
+                          <td>91.14</td>
+                          <td>90.26</td>
+                          <td>51.70</td>
+                          <td>42.29</td>
+                          <td>0.088</td>
+                          <td>0.184</td>
+                          <td>2639</td>
+                        </tr>
+                        <tr>
+                          <td>ADiT</td>
+                          <td>99.52</td>
+                          <td>90.15</td>
+                          <td>90.25</td>
+                          <td>59.80</td>
+                          <td>56.91</td>
+                          <td>76.90</td>
+                          <td>36.76</td>
+                          <td>0.231</td>
+                          <td>0.089</td>
+                          <td>84.81</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Crystalite</strong></td>
+                          <td><strong>99.61</strong></td>
+                          <td>81.94</td>
+                          <td>95.33</td>
+                          <td>79.15</td>
+                          <td>77.12</td>
+                          <td>70.97</td>
+                          <td><strong>48.55</strong></td>
+                          <td><strong>0.046</strong></td>
+                          <td>0.125</td>
+                          <td><strong>22.36 / 5.14†</strong></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
+                  <p class="post-table__caption">
+                    Main de novo generation results. Crystalite achieves the highest S.U.N. score in
+                    this comparison while also being the fastest sampler by a large margin. The
+                    daggered timing denotes an optimized inference setting with FlashAttention and
+                    bfloat16.
+                  </p>
 
                   <p>
-                    The number I would emphasize most is the S.U.N. score. It combines three things
-                    that matter for actual discovery: the material should be
-                    <em>stable</em>, <em>unique</em>, and <em>novel</em>. Crystalite gets the best
-                    value there, while also achieving the best density distribution match in the
-                    comparison.
+                    The most informative summary metric here is <strong>S.U.N.</strong>, the rate of
+                    structures that are simultaneously <strong>stable</strong>,
+                    <strong>unique</strong>, and <strong>novel</strong>. This is a useful way to
+                    summarize discovery performance because it makes the central trade-off explicit:
+                    a model can become more stable by becoming conservative, and more novel by
+                    becoming unreliable. What matters is the balance.
                   </p>
 
                   <figure class="post-embed">
@@ -493,69 +922,278 @@
                       loading="lazy"
                     />
                     <figcaption class="post-embed__caption">
-                      Large-scale generation matters because some metrics change with sampling
-                      budget. Crystalite keeps uniqueness and unique-and-novel rate higher as the
-                      number of generated crystals grows.
+                      Some diversity metrics are properties of the generated set rather than a single
+                      sample. As the sampling budget grows, duplicates accumulate. Crystalite
+                      preserves uniqueness and unique-and-novel rate more effectively at scale.
                     </figcaption>
                   </figure>
 
                   <p>
-                    This matters because some generation metrics are really properties of the whole
-                    sampled set, not of one isolated sample. Uniqueness is the clearest example. If
-                    you generate more and more crystals, duplicates will eventually accumulate. So a
-                    strong generator is not just one that looks good at 10,000 samples, but one that
-                    continues to discover diverse candidates as the sampling budget grows.
+                    This figure highlights an important evaluation point. Uniqueness and related
+                    metrics are not purely per-sample properties. They depend on how many crystals
+                    are generated in total. A strong generator should therefore not only perform well
+                    at 10,000 samples, but continue to discover distinct candidates as the sampling
+                    budget increases.
                   </p>
-                </section>
 
-                <section class="post-section" id="discussion">
-                  <p class="post-meta">Discussion</p>
-                  <h2>What a lighter model buys us</h2>
+                  <p class="post-subheading">External benchmarking: LeMat GenBench</p>
+
                   <p>
-                    The most interesting part of these results, to me, is not that geometry has
-                    become unimportant. It has not. The interesting part is that we do not always
-                    need to encode geometry through a very heavy architecture. A Transformer can be
-                    competitive if the geometric information enters in the right places.
+                    It is also useful to verify that the conclusions are not specific to a single
+                    internal evaluation pipeline. For that reason, we include the LeMat GenBench
+                    results below. This benchmark separates pre-relaxed and non-pre-relaxed models,
+                    so the two groups should be read within their own categories rather than pooled
+                    into a single ranking.
                   </p>
-                  <p>
-                    That has practical value. Lighter models are easier to train, easier to sample
-                    from, and easier to plug into larger screening workflows. They are also easier
-                    to extend. If you want stronger conditioning, larger-scale pretraining, or a
-                    tighter inverse-design loop, it helps to start from a backbone that is compact
-                    rather than overloaded.
+
+                  <div class="post-table-shell">
+                    <table class="post-table post-table--xwide" aria-label="LeMat GenBench results">
+                      <thead>
+                        <tr>
+                          <th rowspan="2">Model</th>
+                          <th>Valid</th>
+                          <th>Unique</th>
+                          <th>Novel</th>
+                          <th>Stable</th>
+                          <th>Metastable</th>
+                          <th>SUN</th>
+                          <th>MSUN</th>
+                          <th>E Above Hull</th>
+                          <th>Relax. RMSD</th>
+                        </tr>
+                        <tr>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(%) ↑</th>
+                          <th>(eV) ↓</th>
+                          <th>(Å) ↓</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="post-table__section-row">
+                          <td colspan="10">Pre-Relaxed Models</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Crystalite</strong></td>
+                          <td><strong>97.20</strong></td>
+                          <td><strong>98.52</strong></td>
+                          <td>54.77</td>
+                          <td><strong>13.05</strong></td>
+                          <td><strong>66.13</strong></td>
+                          <td><strong>1.56</strong></td>
+                          <td><strong>23.29</strong></td>
+                          <td>0.0905</td>
+                          <td>0.1320</td>
+                        </tr>
+                        <tr>
+                          <td>OMatG</td>
+                          <td>96.40</td>
+                          <td>95.20</td>
+                          <td>51.20</td>
+                          <td>11.60</td>
+                          <td>49.80</td>
+                          <td>1.00</td>
+                          <td>18.00</td>
+                          <td>0.0956</td>
+                          <td><strong>0.0759</strong></td>
+                        </tr>
+                        <tr>
+                          <td>MatterGen</td>
+                          <td>95.70</td>
+                          <td>95.10</td>
+                          <td><strong>70.50</strong></td>
+                          <td>2.00</td>
+                          <td>33.40</td>
+                          <td>0.20</td>
+                          <td>15.00</td>
+                          <td>0.1834</td>
+                          <td>0.3878</td>
+                        </tr>
+                        <tr>
+                          <td>PLaID++</td>
+                          <td>96.00</td>
+                          <td>77.80</td>
+                          <td>24.20</td>
+                          <td>12.40</td>
+                          <td>60.70</td>
+                          <td>1.00</td>
+                          <td>7.60</td>
+                          <td><strong>0.0854</strong></td>
+                          <td>0.1286</td>
+                        </tr>
+                        <tr>
+                          <td>WyFormer-DFT</td>
+                          <td>95.20</td>
+                          <td>95.00</td>
+                          <td>66.40</td>
+                          <td>3.70</td>
+                          <td>24.80</td>
+                          <td>0.40</td>
+                          <td>7.80</td>
+                          <td>0.2708</td>
+                          <td>0.4173</td>
+                        </tr>
+                        <tr>
+                          <td>WyFormer</td>
+                          <td>93.40</td>
+                          <td>93.00</td>
+                          <td>66.40</td>
+                          <td>0.50</td>
+                          <td>15.70</td>
+                          <td>0.10</td>
+                          <td>1.90</td>
+                          <td>0.4988</td>
+                          <td>0.8121</td>
+                        </tr>
+
+                        <tr class="post-table__section-row">
+                          <td colspan="10">Non-Pre-Relaxed Models</td>
+                        </tr>
+                        <tr>
+                          <td>DiffCSP</td>
+                          <td><strong>95.70</strong></td>
+                          <td>94.80</td>
+                          <td><strong>66.20</strong></td>
+                          <td><strong>2.30</strong></td>
+                          <td>29.80</td>
+                          <td>0.10</td>
+                          <td><strong>8.50</strong></td>
+                          <td><strong>0.2747</strong></td>
+                          <td><strong>0.3794</strong></td>
+                        </tr>
+                        <tr>
+                          <td>DiffCSP++</td>
+                          <td>95.30</td>
+                          <td><strong>95.10</strong></td>
+                          <td>62.00</td>
+                          <td>1.00</td>
+                          <td>26.40</td>
+                          <td><strong>0.20</strong></td>
+                          <td>5.00</td>
+                          <td>0.4093</td>
+                          <td>0.6933</td>
+                        </tr>
+                        <tr>
+                          <td>SymmCD</td>
+                          <td>73.40</td>
+                          <td>73.00</td>
+                          <td>47.00</td>
+                          <td>1.40</td>
+                          <td>18.60</td>
+                          <td>0.10</td>
+                          <td>2.40</td>
+                          <td>0.8761</td>
+                          <td>0.8720</td>
+                        </tr>
+                        <tr>
+                          <td>CrystalFormer</td>
+                          <td>69.90</td>
+                          <td>69.40</td>
+                          <td>31.80</td>
+                          <td>1.40</td>
+                          <td>28.80</td>
+                          <td>0.00</td>
+                          <td>3.10</td>
+                          <td>0.7039</td>
+                          <td>0.6585</td>
+                        </tr>
+                        <tr>
+                          <td>ADiT</td>
+                          <td>90.60</td>
+                          <td>87.80</td>
+                          <td>26.00</td>
+                          <td>0.40</td>
+                          <td><strong>36.50</strong></td>
+                          <td>0.00</td>
+                          <td>1.00</td>
+                          <td>0.3333</td>
+                          <td>0.3794</td>
+                        </tr>
+                        <tr>
+                          <td>Crystal-GFN</td>
+                          <td>51.70</td>
+                          <td>51.70</td>
+                          <td>51.70</td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>2.0858</td>
+                          <td>1.8665</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p class="post-table__caption">
+                    LeMat GenBench results, shown separately for pre-relaxed and non-pre-relaxed
+                    models. Within the pre-relaxed group, Crystalite leads on validity, uniqueness,
+                    stable rate, metastable rate, SUN, and MSUN.
                   </p>
+
                   <p>
-                    The paper also makes a more general point about evaluation. In crystal
-                    generation, there is no honest “best” model without saying which trade-off you
-                    care about. A model can improve stability by becoming more conservative, or
-                    improve novelty by becoming less reliable. Crystalite looks strongest when the
-                    target is balanced discovery performance rather than one isolated metric.
+                    This external benchmark is useful because it shows that the main conclusions are
+                    not confined to one internal protocol. The strongest message is the same as in
+                    the main table: Crystalite is not merely fast, but also competitive under
+                    benchmark settings that emphasize stability and relaxation quality
+                    <span class="post-cite">[<a href="#ref-12">12</a>]</span>.
                   </p>
                 </section>
 
                 <section class="post-section" id="conclusion">
                   <p class="post-meta">Conclusion</p>
-                  <h2>Simple is not the same as naive</h2>
+                  <h2>Balancing efficiency and expressivity</h2>
+
                   <p>
-                    Crystalite is a lightweight diffusion Transformer for crystal modeling, but the
-                    word <em>lightweight</em> here should not be confused with <em>generic</em>. The
-                    whole point is that the model stays small while being carefully shaped around
-                    the structure of the problem: chemistry enters through a structured atom
-                    representation, the lattice gets its own compact parameterization, and periodic
-                    geometry is injected directly into attention.
+                    Crystalite shows that strong crystal generation does not require pushing all of
+                    the geometric inductive bias into a heavy backbone. Instead, chemical structure
+                    can be encoded in the atom representation, while periodic geometry can be placed
+                    where it matters most: in the loss and in attention through GEM.
                   </p>
+
                   <p>
-                    That combination is enough to produce state-of-the-art results on crystal
-                    structure prediction and very strong <em>de novo</em> generation performance.
-                    The broader lesson is that there is useful space between two extremes: fully
-                    generic Transformers on one side, and very heavy equivariant message-passing
-                    models on the other. Crystalite sits in that middle ground.
+                    In practice, that gives a useful balance. The model remains easier to train,
+                    easier to sample from, and easier to extend than many geometry-heavy
+                    alternatives, while still reaching state-of-the-art crystal structure prediction
+                    results and strong de novo generation performance.
                   </p>
+
                   <p>
-                    For materials discovery, that middle ground looks promising: faster models,
-                    cleaner architectures, and still enough geometric awareness to be genuinely
-                    useful.
+                    This does not make equivariant GNNs obsolete. They remain a strong design choice,
+                    especially when one wants full geometric structure throughout the backbone.
+                    Crystalite instead makes the case for a different operating point: a model that
+                    balances speed, efficiency, and geometric expressivity rather than maximizing
+                    architectural complexity by default.
                   </p>
+
+                  <p>
+                    For crystal modeling, that balance looks genuinely useful. Faster sampling,
+                    cleaner architectures, and carefully placed geometric priors are a practical
+                    combination for more scalable materials discovery workflows.
+                  </p>
+                </section>
+
+                <section class="post-section" id="references">
+                  <p class="post-meta">References</p>
+                  <h2>Selected references</h2>
+
+                  <ol class="post-references">
+                    <li id="ref-1">Merchant et al. (2023). <a href="https://doi.org/10.1038/s41586-023-06735-9" target="_blank" rel="noopener">Scaling deep learning for materials discovery</a>. <em>Nature</em>.</li>
+                    <li id="ref-2">Pickard and Needs (2011). <a href="https://doi.org/10.1088/0953-8984/23/5/053201" target="_blank" rel="noopener">Ab initio random structure searching</a>. <em>Journal of Physics: Condensed Matter</em>.</li>
+                    <li id="ref-3">Oganov and Glass (2006). <a href="http://dx.doi.org/10.1063/1.2210932" target="_blank" rel="noopener">Crystal structure prediction using ab initio evolutionary techniques</a>. <em>The Journal of Chemical Physics</em>.</li>
+                    <li id="ref-4">Oganov et al. (2019). <a href="http://dx.doi.org/10.1038/s41578-019-0101-8" target="_blank" rel="noopener">Structure prediction drives materials discovery</a>. <em>Nature Reviews Materials</em>.</li>
+                    <li id="ref-5">Xie et al. (2021). <a href="https://arxiv.org/abs/2110.06197" target="_blank" rel="noopener">Crystal Diffusion Variational Autoencoder for Periodic Material Generation</a>.</li>
+                    <li id="ref-6">Jiao et al. (2024). <a href="https://doi.org/10.48550/arXiv.2309.04475" target="_blank" rel="noopener">Crystal Structure Prediction by Joint Equivariant Diffusion</a>.</li>
+                    <li id="ref-7">Miller et al. (2024). <a href="https://proceedings.mlr.press/v235/miller24a.html" target="_blank" rel="noopener">FlowMM: generating materials with Riemannian flow matching</a>. <em>ICML</em>.</li>
+                    <li id="ref-8">Hoellmer et al. (2025). <a href="https://doi.org/10.48550/ARXIV.2502.02582" target="_blank" rel="noopener">Open Materials Generation with Stochastic Interpolants</a>.</li>
+                    <li id="ref-9">Zeni et al. (2025). <a href="https://doi.org/10.1038/s41586-025-08628-5" target="_blank" rel="noopener">A Generative Model for Inorganic Materials Design</a>. <em>Nature</em>.</li>
+                    <li id="ref-10">Joshi et al. (2025). <a href="https://openreview.net/forum?id=89QPmZjIhv" target="_blank" rel="noopener">All-atom Diffusion Transformers: Unified generative modelling of molecules and materials</a>.</li>
+                    <li id="ref-11">Yi et al. (2025). <a href="https://doi.org/10.48550/arXiv.2508.16614" target="_blank" rel="noopener">CrystalDiT: A Diffusion Transformer for Crystal Generation</a>.</li>
+                    <li id="ref-12">Betala et al. (2026). <a href="https://arxiv.org/abs/2512.04562" target="_blank" rel="noopener">LeMat-GenBench: A Unified Evaluation Framework for Crystal Generative Models</a>.</li>
+                  </ol>
                 </section>
               </div>
             </section>

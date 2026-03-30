@@ -21,6 +21,7 @@
   ]);
   let isNavigating = false;
   let homeNavOutlineState = null;
+  let postLegendState = null;
   const HOME_BACKDROP_ART_WIDTH = 1920;
   const HOME_BACKDROP_ART_HEIGHT = 1080;
   const HOME_BACKDROP_SCALE = 1.03;
@@ -433,6 +434,183 @@
     homeNavOutlineState = null;
   };
 
+  const teardownPostLegendSpy = () => {
+    if (!postLegendState) return;
+
+    if (postLegendState.observer) {
+      postLegendState.observer.disconnect();
+    }
+
+    if (postLegendState.handleScroll) {
+      window.removeEventListener("scroll", postLegendState.handleScroll);
+    }
+
+    if (postLegendState.handleResize) {
+      window.removeEventListener("resize", postLegendState.handleResize);
+    }
+
+    if (postLegendState.frame) {
+      window.cancelAnimationFrame(postLegendState.frame);
+    }
+
+    postLegendState = null;
+  };
+
+  const setupPostLegendSpy = (root = document) => {
+    const postView =
+      typeof root.matches === "function" && root.matches(".route-view--post")
+        ? root
+        : root.querySelector?.(".route-view--post");
+
+    if (!postView) {
+      teardownPostLegendSpy();
+      return;
+    }
+
+    const legendItems = [...postView.querySelectorAll(".post-legend__item[href^='#']")];
+    if (legendItems.length === 0) {
+      teardownPostLegendSpy();
+      return;
+    }
+
+    const pairs = legendItems
+      .map((item) => {
+        const hash = item.getAttribute("href");
+        const section = hash ? postView.querySelector(hash) : null;
+        return section ? { item, section } : null;
+      })
+      .filter(Boolean);
+
+    if (pairs.length === 0) {
+      teardownPostLegendSpy();
+      return;
+    }
+
+    if (postLegendState?.view === postView) {
+      return;
+    }
+
+    teardownPostLegendSpy();
+
+    const visibility = new Map();
+    const topThreshold = () => Math.max(window.innerHeight * 0.24, 140);
+
+    const setActiveItem = (activePair) => {
+      for (const { item } of pairs) {
+        const isActive = item === activePair?.item;
+        item.classList.toggle("is-active", isActive);
+        if (isActive) {
+          item.setAttribute("aria-current", "true");
+        } else {
+          item.removeAttribute("aria-current");
+        }
+      }
+    };
+
+    const pickActivePair = () => {
+      const threshold = topThreshold();
+      const scored = pairs.map((pair) => {
+        const rect = pair.section.getBoundingClientRect();
+        const visibleRatio = visibility.get(pair.section) || 0;
+        const topDistance = Math.abs(rect.top - threshold);
+        const started = rect.top <= threshold;
+        const ended = rect.bottom <= threshold;
+
+        return {
+          pair,
+          rect,
+          visibleRatio,
+          topDistance,
+          started,
+          ended,
+        };
+      });
+
+      const activeStarted = scored
+        .filter((entry) => entry.started && !entry.ended)
+        .sort((a, b) => {
+          if (Math.abs(b.visibleRatio - a.visibleRatio) > 0.02) {
+            return b.visibleRatio - a.visibleRatio;
+          }
+          return b.rect.top - a.rect.top;
+        })[0];
+
+      if (activeStarted) {
+        return activeStarted.pair;
+      }
+
+      const nearestUpcoming = scored
+        .filter((entry) => !entry.started)
+        .sort((a, b) => a.topDistance - b.topDistance)[0];
+
+      if (nearestUpcoming) {
+        return nearestUpcoming.pair;
+      }
+
+      return scored[scored.length - 1]?.pair || null;
+    };
+
+    const refreshActiveItem = () => {
+      if (!postLegendState || postLegendState.view !== postView) {
+        return;
+      }
+
+      postLegendState.frame = 0;
+      setActiveItem(pickActivePair());
+    };
+
+    const scheduleRefresh = () => {
+      if (!postLegendState || postLegendState.view !== postView || postLegendState.frame) {
+        return;
+      }
+
+      postLegendState.frame = window.requestAnimationFrame(refreshActiveItem);
+    };
+
+    const observer =
+      typeof window.IntersectionObserver === "function"
+        ? new window.IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                visibility.set(entry.target, entry.intersectionRatio);
+              }
+              scheduleRefresh();
+            },
+            {
+              root: null,
+              threshold: [0, 0.15, 0.35, 0.6, 0.9],
+            }
+          )
+        : null;
+
+    if (observer) {
+      for (const { section } of pairs) {
+        observer.observe(section);
+      }
+    }
+
+    const handleScroll = () => {
+      scheduleRefresh();
+    };
+
+    const handleResize = () => {
+      scheduleRefresh();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+
+    postLegendState = {
+      view: postView,
+      observer,
+      handleScroll,
+      handleResize,
+      frame: 0,
+    };
+
+    refreshActiveItem();
+  };
+
   const getHomeView = (root = document) => {
     if (!root) return null;
     if (typeof root.matches === "function" && root.matches('[data-route-view="home"]')) {
@@ -730,6 +908,7 @@
     setupBackdropMotion();
     setupHomeNavOutline(incomingView);
     setupPeriodicTableEmbeds(incomingView);
+    setupPostLegendSpy(incomingView);
 
     await wait(34);
     incomingView.classList.remove("is-entering");
@@ -809,4 +988,5 @@
   setupHomeNavOutline(routeHost);
   setupPageTheme(routeHost);
   setupPeriodicTableEmbeds(routeHost);
+  setupPostLegendSpy(routeHost);
 })();
