@@ -1,0 +1,285 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerthemecrystalite}[2026/03/31 Crystalite editorial beamer theme]
+
+\RequirePackage{iftex}
+
+\mode<presentation>
+
+\RequirePackage{tikz}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{etoolbox}
+\usetikzlibrary{calc}
+
+\ifPDFTeX
+  \RequirePackage[T1]{fontenc}
+  \RequirePackage[utf8]{inputenc}
+  \RequirePackage[scaled=0.96]{helvet}
+  \RequirePackage{courier}
+  \RequirePackage{microtype}
+  \renewcommand{\familydefault}{\sfdefault}
+  \newcommand{\CrystaliteDisplay}{\sffamily\bfseries}
+\else
+  \RequirePackage{fontspec}
+  \setmainfont[
+    Path=assets/fonts/supply/,
+    UprightFont=PPSupplySans-Regular.otf,
+    BoldFont=PPSupplySans-Bold.otf,
+    ItalicFont=PPSupplySans-Regular.otf,
+    BoldItalicFont=PPSupplySans-Bold.otf
+  ]{PP Supply Sans}
+  \setsansfont[
+    Path=assets/fonts/supply/,
+    UprightFont=PPSupplySans-Regular.otf,
+    BoldFont=PPSupplySans-Bold.otf,
+    ItalicFont=PPSupplySans-Regular.otf,
+    BoldItalicFont=PPSupplySans-Bold.otf
+  ]{PP Supply Sans}
+  \setmonofont[
+    Path=assets/fonts/supply/,
+    UprightFont=PPSupplyMono-Regular.otf,
+    BoldFont=PPSupplyMono-Medium.otf
+  ]{PP Supply Mono}
+  \newfontfamily\CrystaliteDisplay[
+    Path=assets/fonts/rader/,
+    UprightFont=PPRader-Regular.otf,
+    BoldFont=PPRader-Bold.otf
+  ]{PP Rader}
+\fi
+
+\definecolor{crystalitepaper}{HTML}{EDF2F8}
+\definecolor{crystalitepaperdeep}{HTML}{F5F7FB}
+\definecolor{crystaliteink}{HTML}{0F172A}
+\definecolor{crystalitebody}{HTML}{26364A}
+\definecolor{crystalitemuted}{HTML}{71839B}
+\definecolor{crystaliteline}{HTML}{D8E1EC}
+\definecolor{crystalitepanel}{HTML}{FFFFFF}
+\definecolor{crystaliteaccenta}{HTML}{6C8AFF}
+\definecolor{crystaliteaccentb}{HTML}{E6B8F3}
+\definecolor{crystaliteaccentdark}{HTML}{3552A4}
+\definecolor{crystalitealert}{HTML}{B56576}
+
+\setbeamercolor{normal text}{fg=crystaliteink,bg=crystalitepaper}
+\setbeamercolor{title}{fg=crystaliteink}
+\setbeamercolor{subtitle}{fg=crystalitemuted}
+\setbeamercolor{frametitle}{fg=crystaliteink}
+\setbeamercolor{framesubtitle}{fg=crystalitemuted}
+\setbeamercolor{structure}{fg=crystaliteaccentdark}
+\setbeamercolor{footline}{fg=crystalitemuted}
+\setbeamercolor{block title}{fg=crystaliteink,bg=crystalitepanel}
+\setbeamercolor{block body}{fg=crystalitebody,bg=crystalitepanel}
+\setbeamercolor{alerted text}{fg=crystalitealert}
+\setbeamercolor{itemize item}{fg=crystaliteaccentdark}
+\setbeamercolor{itemize subitem}{fg=crystaliteaccentdark}
+
+\setbeamerfont{title}{size=\fontsize{28}{30},series=\bfseries}
+\setbeamerfont{subtitle}{size=\fontsize{12.5}{17}}
+\setbeamerfont{frametitle}{size=\fontsize{20.5}{22.5},series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\fontsize{10.5}{14}}
+\setbeamerfont{author}{size=\fontsize{11}{13}}
+\setbeamerfont{date}{size=\fontsize{10.5}{12}}
+\setbeamerfont{footline}{size=\fontsize{8.5}{9}}
+\setbeamerfont{section title}{size=\fontsize{26}{28},series=\bfseries}
+\setbeamerfont{block title}{size=\fontsize{11}{12.5},series=\bfseries}
+\setbeamerfont{block body}{size=\fontsize{10}{13}}
+
+\setbeamersize{text margin left=1.02cm,text margin right=1.02cm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+
+\ifPDFTeX
+  \newcommand{\crystalitemeta}[1]{%
+    {{\ttfamily\fontsize{8}{10}\selectfont\textls[140]{\MakeUppercase{#1}}}}%
+  }
+\else
+  \newcommand{\crystalitemeta}[1]{%
+    {{\ttfamily\fontsize{8}{10}\selectfont\addfontfeatures{LetterSpace=10}\MakeUppercase{#1}}}%
+  }
+\fi
+
+\newcommand{\crystalitecaption}[1]{%
+  \par\vspace{0.35em}{\color{crystalitemuted}\fontsize{8.4}{10.2}\selectfont #1\par}%
+}
+
+\newcommand{\insertcrystalitekicker}{}
+\newcommand{\crystalitekicker}[1]{\gdef\insertcrystalitekicker{#1}}
+
+\newtcolorbox{crystalitepanel}[1][]{%
+  enhanced,
+  colback=crystalitepanel,
+  colframe=crystaliteline,
+  boxrule=0.6pt,
+  arc=4.8mm,
+  left=3mm,
+  right=3mm,
+  top=2.4mm,
+  bottom=2.4mm,
+  before skip=0pt,
+  after skip=0pt,
+  #1
+}
+
+\newtcolorbox{crystalitenote}[1][]{%
+  enhanced,
+  colback=crystaliteaccenta!6!white,
+  colframe=crystaliteaccenta!20!white,
+  boxrule=0.7pt,
+  arc=4.8mm,
+  left=3mm,
+  right=3mm,
+  top=2.4mm,
+  bottom=2.4mm,
+  before skip=0pt,
+  after skip=0pt,
+  #1
+}
+
+\setbeamertemplate{itemize item}{\tikz\fill[crystaliteaccentdark] (0,0) circle (1.2pt);}
+\setbeamertemplate{itemize subitem}{\tikz\fill[crystaliteaccentdark!70] (0,0) circle (0.9pt);}
+\setlength{\leftmargini}{1.1em}
+\setlength{\leftmarginii}{1.2em}
+\AtBeginEnvironment{itemize}{\setlength{\itemsep}{0.38em}\setlength{\parskip}{0pt}}
+
+\setbeamertemplate{background}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \path[shade, top color=crystalitepaperdeep, bottom color=crystalitepaper]
+      (current page.south west) rectangle (current page.north east);
+    \shade[inner color=white, outer color=crystalitepaperdeep]
+      ($(current page.north west)+(1.25,-0.7)$) circle (3.1cm);
+    \fill[crystaliteaccenta, opacity=0.065]
+      ($(current page.north east)+(-2.0,-1.35)$) circle (2.1cm);
+    \fill[crystaliteaccentb, opacity=0.085]
+      ($(current page.south west)+(2.5,1.35)$) circle (1.95cm);
+  \end{tikzpicture}%
+}
+
+\makeatletter
+\defbeamertemplate*{title page}{crystalite}{%
+  \vspace*{0.5cm}
+  {\color{crystalitemuted}\crystalitemeta{\insertcrystalitekicker}\par}
+  \vspace{0.85cm}
+  {\usebeamerfont{title}\inserttitle\par}
+  \ifdefempty{\insertsubtitle}{}{%
+    \vspace{0.6cm}
+    {\usebeamerfont{subtitle}\color{crystalitemuted}\parbox{0.72\linewidth}{\insertsubtitle}\par}%
+  }
+  \vfill
+  \begin{tikzpicture}
+    \draw[draw=crystaliteline, line width=0.6pt] (0,0) -- (\linewidth,0);
+  \end{tikzpicture}
+  \vspace{0.45cm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.32\textwidth}
+    {\color{crystalitemuted}\crystalitemeta{Author}\par}
+    \vspace{0.15cm}
+    {\usebeamerfont{author}\insertauthor\par}
+    \column{0.32\textwidth}
+    {\color{crystalitemuted}\crystalitemeta{Context}\par}
+    \vspace{0.15cm}
+    {\usebeamerfont{author}\insertinstitute\par}
+    \column{0.32\textwidth}
+    {\color{crystalitemuted}\crystalitemeta{Build}\par}
+    \vspace{0.15cm}
+    {\usebeamerfont{date}\insertdate\par}
+  \end{columns}
+}
+
+\defbeamertemplate*{frametitle}{crystalite}{%
+  \vspace*{0.22cm}
+  {\color{crystalitemuted}\crystalitemeta{\insertsectionhead}\par}
+  \vspace{0.08cm}
+  {\usebeamerfont{frametitle}\insertframetitle\par}
+  \ifdefempty{\insertframesubtitle}{}{%
+    \vspace{0.12cm}
+    {\usebeamerfont{framesubtitle}\color{crystalitemuted}\insertframesubtitle\par}
+  }
+  \vspace{0.34cm}
+}
+
+\defbeamertemplate*{section page}{crystalite}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[
+      anchor=east,
+      text=crystaliteaccenta!18,
+      font=\CrystaliteDisplay\fontsize{88}{88}\selectfont
+    ] at ($(current page.east)+(-0.65,0.05)$) {\insertsectionnumber};
+  \end{tikzpicture}
+  \vspace*{1.0cm}
+  {\color{crystalitemuted}\crystalitemeta{Section \insertsectionnumber}\par}
+  \vfill
+  {\usebeamerfont{section title}\parbox{0.72\linewidth}{\insertsectionhead}\par}
+  \vspace{0.35cm}
+  {\color{crystalitemuted}\fontsize{11}{15}\selectfont
+    \parbox{0.62\linewidth}{Editorial divider slide with the same quiet hierarchy, generous whitespace, and restrained accent treatment as the Crystalite article.}\par}
+  \vfill
+}
+
+\defbeamertemplate*{footline}{crystalite}{%
+  \leavevmode
+  \hbox to \paperwidth{\color{crystaliteline}\rule{\paperwidth}{0.55pt}}
+  \hbox{%
+    \begin{beamercolorbox}[wd=.72\paperwidth,ht=3.8ex,dp=1.65ex,leftskip=1.12cm]{footline}
+      \usebeamerfont{footline}%
+      \color{crystalitemuted}%
+      \ifdefempty{\insertsectionhead}{\crystalitemeta{\insertshorttitle}}{\crystalitemeta{\insertsectionhead}}%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.28\paperwidth,ht=3.8ex,dp=1.65ex,rightskip=1.12cm plus 1fil]{footline}
+      \usebeamerfont{footline}\color{crystalitemuted}\insertframenumber/\inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+}
+\makeatother
+
+\setbeamertemplate{title page}[crystalite]
+\setbeamertemplate{frametitle}[crystalite]
+\setbeamertemplate{section page}[crystalite]
+\setbeamertemplate{footline}[crystalite]
+
+\AtBeginSection[]{
+  \begin{frame}[plain]
+    \sectionpage
+  \end{frame}
+}
+
+\setbeamertemplate{block begin}{%
+  \begin{tcolorbox}[
+    enhanced,
+    colback=crystalitepanel,
+    colframe=crystaliteline,
+    boxrule=0.6pt,
+    arc=4.8mm,
+    left=3mm,
+    right=3mm,
+    top=2.2mm,
+    bottom=2.2mm,
+    title={\insertblocktitle},
+    coltitle=crystaliteink,
+    fonttitle=\bfseries,
+    before skip=0pt,
+    after skip=0pt
+  ]%
+  \usebeamerfont{block body}\color{crystalitebody}%
+}
+\setbeamertemplate{block end}{\end{tcolorbox}}
+
+\setbeamertemplate{block alerted begin}{%
+  \begin{tcolorbox}[
+    enhanced,
+    colback=crystaliteaccentb!10!white,
+    colframe=crystaliteaccentb!35!crystaliteaccenta,
+    boxrule=0.7pt,
+    arc=4.8mm,
+    left=3mm,
+    right=3mm,
+    top=2.2mm,
+    bottom=2.2mm,
+    title={\insertblocktitle},
+    coltitle=crystaliteink,
+    fonttitle=\bfseries,
+    before skip=0pt,
+    after skip=0pt
+  ]%
+  \usebeamerfont{block body}\color{crystalitebody}%
+}
+\setbeamertemplate{block alerted end}{\end{tcolorbox}}
+
+\mode<all>

@@ -1,0 +1,15 @@
+\frametitle{Starting A New Deck}\framesubtitle {Minimal source skeleton}
+\small
+\begin{verbatim}
+\documentclass[aspectratio=169]{beamer}
+\usetheme{crystalite}
+\title{Your Talk Title}
+\subtitle{One-sentence deck text}
+\crystalitekicker{Apr 2026 / Conference Talk}
+\author{Your Name}
+\institute{Your Group}
+\date{latexmk main.tex}
+
+\begin{document}
+\begin{frame}[plain]
+  \titlepage
