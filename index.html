@@ -36,25 +36,192 @@
         }
       })();
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
     <link rel="stylesheet" href="assets/styles.css" />
     <script defer src="assets/script.js"></script>
   </head>
-  <body class="home">
+  <body class="home" data-theme="light">
     <div class="home-backdrop" aria-hidden="true">
       <div class="home-motion" id="homeMotion"></div>
     </div>
     <main class="stage" aria-label="Site">
       <div class="route-host" data-route-host>
-        <section class="route-view route-view--home" data-route-view="home" aria-label="Site navigation">
-          <div class="home-landing">
-            <p class="home-kicker">Tin Hadzi Veljkovic / Personal Website</p>
-            <nav class="home-nav" aria-label="Site">
-              <a href="about.html">About Me</a>
-              <a href="research.html">Research</a>
-              <a href="blogposts.html">Blogposts</a>
-              <a href="contact.html">Contact</a>
-            </nav>
+        <section
+          class="route-view route-view--home route-view--home-profile"
+          data-route-view="home"
+          data-theme="light"
+          aria-label="Homepage"
+        >
+          <div class="home-shell">
+            <header class="home-profile__masthead">
+              <h1 class="home-profile__brand">Tin Hadzi Veljkovic</h1>
+              <button class="page-toggle" type="button" data-theme-toggle aria-pressed="true">
+                INVERSE COLORS
+              </button>
+            </header>
+
+            <section class="home-profile__hero" id="about" aria-label="About">
+              <div class="home-profile__intro">
+                <p class="home-profile__lede">
+                  I’m a PhD student at the University of Amsterdam (AMLab / Bosch Delta
+                  Lab), advised by Jan-Willem van de Meent.
+                </p>
+                <p>
+                  I work on generative models for materials, continuous representations,
+                  and representation learning for computational chemistry. I like building
+                  models and representations that stay grounded in physics, but are also
+                  usable in practice.
+                </p>
+                <p class="home-profile__links">
+                  <a href="#publications">Research</a>
+                  <a href="#writing">Blogposts</a>
+                  <a href="#contact">Get in touch</a>
+                </p>
+              </div>
+
+              <div class="home-profile__media" aria-hidden="true">
+                <img
+                  class="home-profile__photo"
+                  src="assets/images/myself.jpeg"
+                  alt="Portrait of Tin Hadziveljkovic"
+                />
+              </div>
+            </section>
+
+            <div class="home-profile__grid">
+              <section class="home-panel" id="publications" aria-labelledby="publications-title">
+                <div class="home-section__head">
+                  <p class="home-section__eyebrow">Selected work</p>
+                  <h2 id="publications-title">Publications</h2>
+                </div>
+
+                <ol class="home-list">
+                  <li class="home-entry">
+                    <a
+                      class="home-entry__title"
+                      href="https://arxiv.org/abs/2604.02270"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Crystalite: A Lightweight Transformer for Efficient Crystal Modeling
+                    </a>
+                    <p class="home-entry__meta">Hadži Veljković et al. / 2026 / Preprint</p>
+                    <p class="home-entry__summary">
+                      Introduces a lightweight diffusion Transformer for crystal modeling,
+                      combining subatomic tokenization with geometry-aware attention biases
+                      to improve efficiency while reaching strong crystal structure
+                      prediction and generation results.
+                    </p>
+                  </li>
+                  <li class="home-entry">
+                    <a
+                      class="home-entry__title"
+                      href="https://www.arxiv.org/abs/2601.21583"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      CORDS: Continuous Representations of Discrete Structures
+                    </a>
+                    <p class="home-entry__meta">Hadži Veljković et al. / 2026</p>
+                    <p class="home-entry__summary">
+                      Invertible mappings from variable-size sets to continuous density
+                      and feature fields, enabling models to operate in field space and
+                      decode exactly back to discrete objects.
+                    </p>
+                  </li>
+                  <li class="home-entry">
+                    <a
+                      class="home-entry__title"
+                      href="https://arxiv.org/abs/2504.03521"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Dynamic Training Enhances Machine Learning Potentials for Long-Lasting
+                      Molecular Dynamics
+                    </a>
+                    <p class="home-entry__meta">Žugec, Hadži Veljković et al. / 2025</p>
+                    <p class="home-entry__summary">
+                      Refreshes ML interatomic potentials during long MD runs to preserve
+                      accuracy over extended simulations.
+                    </p>
+                  </li>
+                  <li class="home-entry">
+                    <a
+                      class="home-entry__title"
+                      href="https://arxiv.org/abs/2405.20915"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Fast yet Safe: Early-Exiting with Risk Control
+                    </a>
+                    <p class="home-entry__meta">Jazbec, Timans, Hadži Veljković et al. / 2024</p>
+                    <p class="home-entry__summary">
+                      Applies distribution-free risk control to early-exit neural nets so
+                      faster predictions still satisfy target error guarantees.
+                    </p>
+                  </li>
+                </ol>
+              </section>
+
+              <section class="home-panel" id="writing" aria-labelledby="writing-title">
+                <div class="home-section__head">
+                  <p class="home-section__eyebrow">Recent writing</p>
+                  <h2 id="writing-title">Blogposts</h2>
+                </div>
+
+                <ul class="home-list home-list--unordered">
+                  <li class="home-entry">
+                    <a class="home-entry__title" href="blogposts/crystalite/">
+                      Crystalite: A Lightweight Transformer for Efficient Crystal Modeling
+                    </a>
+                    <p class="home-entry__meta">Mar 30, 2026</p>
+                    <p class="home-entry__summary">
+                      An overview of Crystalite, its chemistry-aware design, and why
+                      lightweight transformer choices matter for crystal modeling.
+                    </p>
+                  </li>
+                </ul>
+              </section>
+            </div>
+
+            <section class="home-panel home-panel--contact" id="contact" aria-labelledby="contact-title">
+              <div class="home-section__head">
+                <p class="home-section__eyebrow">Contact</p>
+                <h2 id="contact-title">Get in touch</h2>
+              </div>
+
+              <div class="home-contact">
+                <div>
+                  <h3>Email</h3>
+                  <ul class="home-contact__list">
+                    <li><a href="mailto:t.hadziveljkovic@uva.nl">t.hadziveljkovic@uva.nl</a></li>
+                    <li><a href="mailto:tin.hadzi@gmail.com">tin.hadzi@gmail.com</a></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3>Social</h3>
+                  <ul class="home-contact__list">
+                    <li><a href="https://x.com/HvTin" target="_blank" rel="noopener">X</a></li>
+                    <li>
+                      <a href="https://www.linkedin.com/in/tin-hv/" target="_blank" rel="noopener">
+                        LinkedIn
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://www.instagram.com/brodmornica" target="_blank" rel="noopener">
+                        Instagram
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </section>
           </div>
         </section>
       </div>

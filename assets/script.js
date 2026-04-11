@@ -250,17 +250,14 @@
 
   const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
   const homeRoute = () => new URL("index.html", window.location.href).href;
+  const resolveTheme = (kind, theme = "") => theme || (kind === "home" ? "light" : "dark");
   const createRouteView = (route, stateClass = "", themeOverride = "") => {
     const template = document.createElement("template");
     template.innerHTML = route.html.trim();
     const view = template.content.firstElementChild;
 
     if (!view) return null;
-    if (route.kind === "page") {
-      view.dataset.theme = themeOverride || route.theme || "dark";
-    } else {
-      view.removeAttribute("data-theme");
-    }
+    view.dataset.theme = resolveTheme(route.kind, themeOverride || route.theme);
     if (stateClass) view.classList.add(stateClass);
 
     return view;
@@ -299,11 +296,12 @@
     for (const toggle of toggles) {
       if (toggle.dataset.themeReady === "true") continue;
 
-      const view = toggle.closest('[data-route-view="page"]');
+      const view = toggle.closest("[data-route-view]");
       if (!view) continue;
+      const kind = view.dataset.routeView === "home" ? "home" : "page";
 
       const setTheme = (theme) => {
-        const nextTheme = theme === "light" ? "light" : "dark";
+        const nextTheme = resolveTheme(kind, theme === "light" ? "light" : "dark");
         view.dataset.theme = nextTheme;
         body.dataset.theme = nextTheme;
         toggle.setAttribute("aria-pressed", nextTheme === "light" ? "true" : "false");
@@ -314,7 +312,7 @@
       };
 
       toggle.dataset.themeReady = "true";
-      setTheme(view.dataset.theme || body.dataset.theme || "dark");
+      setTheme(view.dataset.theme || body.dataset.theme || resolveTheme(kind));
 
       toggle.addEventListener("click", () => {
         const next = view.dataset.theme === "light" ? "dark" : "light";
@@ -813,12 +811,7 @@
   const applyRouteState = (route, themeOverride = "") => {
     body.dataset.routeKind = route.kind;
     body.dataset.routeVariant = route.variant || route.kind;
-
-    if (route.kind === "page") {
-      body.dataset.theme = themeOverride || route.theme || "dark";
-    } else {
-      body.removeAttribute("data-theme");
-    }
+    body.dataset.theme = resolveTheme(route.kind, themeOverride || route.theme);
 
     document.title = route.title;
     document.documentElement.lang = route.lang;
@@ -853,9 +846,8 @@
     const currentView =
       routeHost.querySelector("[data-route-view]:not(.is-exiting)") ||
       routeHost.querySelector("[data-route-view]");
-    const previousTheme =
-      currentView?.dataset.routeView === "page" ? currentView.dataset.theme || body.dataset.theme || "dark" : "";
-    const nextTheme = route.kind === "page" ? previousTheme || route.theme || "dark" : "";
+    const previousTheme = currentView?.dataset.theme || body.dataset.theme || "";
+    const nextTheme = previousTheme || resolveTheme(route.kind, route.theme);
     const lockedHeight = Math.max(
       routeHost.getBoundingClientRect().height,
       currentView ? currentView.getBoundingClientRect().height : 0
@@ -921,6 +913,10 @@
     if (link.hasAttribute("download")) return;
 
     const targetUrl = new URL(link.href, window.location.href);
+    const currentUrl = new URL(window.location.href);
+    if (normalizePath(targetUrl.href) === normalizePath(currentUrl.href) && targetUrl.hash) {
+      return;
+    }
     if (!isInternalHtmlRoute(targetUrl)) return;
     if (!shouldUseClientRouter(targetUrl)) return;
 
@@ -955,15 +951,19 @@
   const initialView = routeHost.querySelector("[data-route-view]");
 
   if (initialView?.dataset.routeView === "page") {
-    const initialTheme = body.dataset.theme === "light" ? "light" : body.dataset.theme || "dark";
+    const initialTheme = resolveTheme("page", body.dataset.theme);
     body.dataset.routeKind = "page";
     body.dataset.routeVariant = initialView.classList.contains("route-view--post") ? "post" : "page";
     body.dataset.theme = initialTheme;
     initialView.dataset.theme = initialTheme;
   } else {
+    const initialTheme = resolveTheme("home", initialView?.dataset.theme || body.dataset.theme);
     body.dataset.routeKind = "home";
     body.dataset.routeVariant = "home";
-    body.removeAttribute("data-theme");
+    body.dataset.theme = initialTheme;
+    if (initialView) {
+      initialView.dataset.theme = initialTheme;
+    }
   }
 
   setupBackdropMotion();
