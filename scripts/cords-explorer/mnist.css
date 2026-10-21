@@ -1,0 +1,70 @@
+:root {
+  --neutral: #7a8699; --figure-height: 560px;
+}
+:root[data-theme="dark"] {
+  --neutral: #8a96aa;
+}
+.kicker { margin: 0; }
+.toolbar { align-items: flex-start; gap: 16px; min-height: 48px; }
+.toolbar > .kicker { padding-top: 6px; }
+.scene-slider { flex: 1; display: grid; grid-template-columns: 14px minmax(60px,1fr) 68px; gap: 4px 12px; align-items: start; }
+.scene-slider > label, .scene-slider > output { padding-top: 6px; }
+.scene-slider > label { font-size: 14px; }
+.scene-slider output { text-align: right; font-size: 12px; }
+.training-slider { position: relative; }
+.training-band { position: absolute; top: 11px; left: 8px; width: calc((100% - 16px) * .736842); height: 2px; background: var(--text); pointer-events: none; opacity: .45; }
+.training-band::after { content: ''; position: absolute; right: 0; top: -3px; width: 1px; height: 8px; background: var(--text); }
+#training-caption { grid-column: 2 / -1; font-size: 11px; color: var(--kicker); white-space: nowrap; }
+.text-button { min-height: 28px; padding: 0 2px; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.plane-labels { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.plane-label { color: var(--muted); font-size: 13px; font-style: italic; white-space: nowrap; padding-left: 10px; }
+.plane-label sub { font-size: .8em; }
+.decoded-label { font-size: 11px; background: var(--chip); color: var(--text); border: 1px solid var(--class-color); border-radius: 3px; padding: 1px 4px; }
+.viewport-badge { line-height: 1.5; }
+#scene-badge.outside { background: var(--chip); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; display: inline-block; }
+#scene-badge.outside::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--measure); }
+.cell-caption { right: 12px; bottom: 16px; }
+.drag-hint { bottom: 16px; }
+.panel-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+.panel-title span { color: var(--muted); font-size: 13px; }
+.control-section { margin-bottom: 18px; }
+.control-section > .kicker { margin-bottom: 9px; }
+.class-chips { display: grid; grid-template-columns: repeat(5,1fr); margin-bottom: 8px; }
+.token { justify-content: center; scroll-snap-align: center; }
+.dot { background: var(--class-color); }
+.token[aria-pressed="true"] { border-color: var(--class-color); background: color-mix(in srgb, var(--class-color) 8%, var(--chip)); }
+.grid-control { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+#grid-label { color: var(--muted); font-size: 12px; }
+.slider-row { grid-template-columns: 18px minmax(60px,1fr) 60px; }
+#m-control { margin-top: 12px; }
+input[type="range"] { accent-color: var(--text); }
+input[type="range"]::-webkit-slider-runnable-track { background: color-mix(in srgb, var(--text) 25%, var(--surface)); }
+input[type="range"]::-webkit-slider-thumb { background: var(--text); }
+input[type="range"]::-moz-range-track { background: color-mix(in srgb, var(--text) 25%, var(--surface)); }
+input[type="range"]::-moz-range-thumb { background: var(--text); }
+.switch { background: var(--neutral); }
+.decode-results { transition: grid-template-rows 220ms ease-out; }
+#decode-status { margin: 4px 0; }
+#decode-status.error, #result-count.error { color: var(--error); }
+#result-values > div { grid-template-columns: 52px minmax(0,1fr); min-height: 26px; padding: 2px 0; }
+dd { line-height: 1.45; }
+#result-count { font-size: 12px; }
+.figure-note { min-height: 36px; }
+.measurement { gap: 4px 6px; }
+#read-estimate.off { color: var(--measure); }
+@media (max-width: 719px) {
+  .toolbar { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 4px 10px; }
+  .scene-slider { gap: 4px 7px; grid-template-columns: 12px minmax(60px,1fr) 62px; }
+  #new-scene { grid-column: 3; grid-row: 1; justify-self: end; }
+  :root { --figure-height: 420px; }
+  .chip-row { overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; padding: 3px; }
+  .class-chips { display: flex; }
+  .token { min-width: 45px; }
+  .viewport-badge { font-size: 11px; }
+  .cell-caption { font-size: 11px; }
+  .plane-label { font-size: 12px; }
+}
+@media (pointer: coarse) {
+  .text-button { min-height: 36px; }
+  .training-band { top: 17px; }
+}

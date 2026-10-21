@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CORDS · MultiMNIST</title>
+  <meta name="description" content="Turn digit boxes into a density and twelve feature fields, sample them, and recover the boxes.">
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const query = new URLSearchParams(location.search);
+      if (query.get('embed') === '1') root.classList.add('embed-mode');
+      let theme = query.get('theme');
+      if (!['light', 'dark'].includes(theme)) {
+        try {
+          const source = window.frameElement?.closest('[data-theme]') || (window.frameElement && parent.document.body);
+          theme = source?.dataset.theme;
+        } catch (_) { /* Cross-origin embeds follow the system theme. */ }
+      }
+      root.dataset.theme = ['light', 'dark'].includes(theme) ? theme :
+        matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Roboto:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="scripts/cords-explorer/figure.css">
+  <link rel="stylesheet" href="scripts/cords-explorer/mnist.css">
+  <script type="importmap">
+    {"imports":{"three":"./scripts/orbit-explorer/vendor/three/three.module.min.js","three/addons/":"./scripts/orbit-explorer/vendor/three/addons/"}}
+  </script>
+  <script src="scripts/cords-explorer/data/mnist.js"></script>
+  <script type="module" src="scripts/cords-explorer/mnist-app.js"></script>
+</head>
+<body>
+  <header class="standalone-header">
+    <h1>CORDS · MultiMNIST</h1>
+    <p>Boxes become a density and twelve feature channels on the image plane.</p>
+  </header>
+  <main id="explorer" aria-label="CORDS MultiMNIST interactive figure">
+    <div class="toolbar">
+      <span class="kicker">Scene</span>
+      <div class="scene-slider">
+        <label for="n">N</label>
+        <div class="training-slider">
+          <input id="n" type="range" min="1" max="20" step="1" value="8" aria-label="Number of digits" aria-describedby="training-caption">
+          <span class="training-band" aria-hidden="true"></span>
+        </div>
+        <output id="n-value" for="n">8 digits</output>
+        <span id="training-caption">training N ≤ 15</span>
+      </div>
+      <button id="new-scene" class="text-button" type="button">New scene</button>
+    </div>
+    <div class="main-row">
+      <div id="viewport" tabindex="0" role="group" aria-label="Three stacked planes: digit image, density, and features. Drag to rotate; scroll or pinch to zoom. Arrow keys rotate; double-click refits.">
+        <div class="viewport-badge"><span id="scene-badge">seed 1 · 8 digits</span></div>
+        <span id="field-caption" class="cell-caption">N = ∫ρ · one unit of mass per digit</span>
+        <span id="drag-hint" class="drag-hint">drag to rotate · scroll to zoom</span>
+        <div id="box-tooltip" class="figure-tooltip" role="tooltip" hidden></div>
+        <p id="loading" class="webgl-message" role="status">Loading…</p>
+      </div>
+      <aside id="panel" aria-label="Field and sampling controls">
+        <div class="panel-title"><h2 id="scene-title">8 digits</h2><span id="scene-meta">seed 1 · 128²</span></div>
+        <section class="control-section" aria-labelledby="plane-title">
+          <h3 id="plane-title" class="kicker">Field plane</h3>
+          <div id="class-chips" class="chip-row class-chips" role="group" aria-label="Digit class"></div>
+          <div id="plane-chips" class="chip-row" role="group" aria-label="Feature plane">
+            <button class="chip" type="button" data-plane="all" aria-pressed="true">All classes</button>
+            <button class="chip" type="button" data-plane="width" aria-pressed="false">Width</button>
+            <button class="chip" type="button" data-plane="height" aria-pressed="false">Height</button>
+          </div>
+        </section>
+        <section class="control-section" aria-labelledby="sampling-title">
+          <h3 id="sampling-title" class="kicker">Sampling</h3>
+          <div id="sampling" class="segments" role="group" aria-label="Sampling method">
+            <button type="button" data-sampling="uniform" aria-pressed="true">Uniform</button>
+            <button type="button" data-sampling="importance" aria-pressed="false">Importance</button>
+          </div>
+          <div id="grid-control" class="grid-control">
+            <span id="grid-label">grid</span>
+            <div id="grid-chips" class="chip-row" role="group" aria-label="Pixels per side">
+              <button class="chip" type="button" data-grid="128" aria-pressed="true">128</button>
+              <button class="chip" type="button" data-grid="64" aria-pressed="false">64</button>
+              <button class="chip" type="button" data-grid="32" aria-pressed="false">32</button>
+              <button class="chip" type="button" data-grid="16" aria-pressed="false">16</button>
+            </div>
+          </div>
+          <div id="m-control" class="slider-row" hidden>
+            <label for="m">M</label><input id="m" type="range" min="0" max="4" step="1" value="2" aria-label="Importance points"><output id="m-value" for="m">1 024</output>
+          </div>
+        </section>
+        <section class="control-section" aria-labelledby="kernel-title">
+          <h3 id="kernel-title" class="kicker">Kernel</h3>
+          <div class="slider-row">
+            <label for="sigma">σ</label><input id="sigma" type="range" min="1" max="6" step="0.1" value="4" aria-label="Kernel width in pixels"><output id="sigma-value" for="sigma">4.0 px</output>
+          </div>
+        </section>
+        <section class="decode-section" aria-labelledby="decode-title">
+          <div class="decode-heading">
+            <h3 id="decode-title" class="kicker">Decode</h3>
+            <button id="decode-toggle" class="switch-control" type="button" role="switch" aria-checked="false" aria-label="Decode boxes" aria-controls="decode-results"><span class="switch" aria-hidden="true"></span><span id="decode-state">off</span></button>
+          </div>
+          <div id="decode-results" class="decode-results" inert>
+            <div class="results-inner">
+              <p id="decode-status" role="status" aria-live="polite" hidden></p>
+              <dl id="result-values">
+                <div><dt>Count</dt><dd id="result-count">—</dd></div>
+                <div><dt>Centers</dt><dd id="result-centres">—</dd></div>
+                <div><dt>Sizes</dt><dd id="result-sizes">—</dd></div>
+                <div><dt>Classes</dt><dd id="result-classes">—</dd></div>
+              </dl>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <p id="sampling-note" class="figure-note">Each digit puts one unit of mass on the pixel grid, so the sum is N at every resolution; what a coarse grid loses is the separation of nearby peaks. On 16² try N ≥ 15.</p>
+    <section class="readout" aria-label="Live field measurements">
+      <div><span class="kicker">Objects <span class="sym">N</span></span><div class="measurement"><output id="read-n">8</output><span>digits</span></div></div>
+      <div><span class="kicker">Samples <span class="sym">M</span></span><div class="measurement"><output id="read-m">16 384</output><span id="read-sampling">128² grid</span></div></div>
+      <div><span class="kicker">Kernel <span class="sym">σ</span></span><div class="measurement"><output id="read-sigma">4.0</output><span>px</span></div></div>
+      <div><span class="kicker">Estimate <span class="sym">N̂</span></span><div class="measurement"><output id="read-estimate">—</output><span id="read-round">→ 8</span></div></div>
+    </section>
+  </main>
+</body>
+</html>

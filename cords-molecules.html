@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CORDS · Molecules</title>
+  <meta name="description" content="Atoms become a density and five feature fields; a model sees only samples of them.">
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const params = new URLSearchParams(location.search);
+      if (params.get('embed') === '1') root.classList.add('embed-mode');
+      let theme = params.get('theme');
+      if (theme !== 'light' && theme !== 'dark') {
+        try {
+          const source = window.frameElement?.closest('[data-theme]') || (window.frameElement && parent.document.body);
+          theme = source?.dataset.theme;
+        } catch (_) { /* Cross-origin embeds follow the system preference. */ }
+      }
+      root.dataset.theme = ['light', 'dark'].includes(theme) ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Roboto:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="scripts/cords-explorer/figure.css">
+  <link rel="stylesheet" href="scripts/cords-explorer/molecules.css">
+  <script type="importmap">
+    {"imports":{"three":"./scripts/orbit-explorer/vendor/three/three.module.min.js","three/addons/":"./scripts/orbit-explorer/vendor/three/addons/"}}
+  </script>
+  <script src="scripts/cords-explorer/data/molecules.js"></script>
+  <script type="module" src="scripts/cords-explorer/molecules-app.js"></script>
+</head>
+<body>
+  <header class="standalone-header">
+    <h1>CORDS · Molecules</h1>
+    <p>Atoms become a density and five feature fields; a model sees only samples of them.</p>
+  </header>
+  <main id="explorer" aria-label="CORDS molecule figure">
+    <div class="toolbar">
+      <span class="kicker" id="molecule-label">Molecule</span>
+      <div id="molecules" class="chip-row" role="group" aria-labelledby="molecule-label"></div>
+    </div>
+    <div class="main-row">
+      <div id="viewport" tabindex="0" role="group" aria-label="Molecule above its projected field. Drag to rotate; scroll or pinch to zoom. Arrow keys rotate; double-click refits; Escape blurs.">
+        <span id="structure-badge" class="viewport-badge">Ethanol · 9 atoms</span>
+        <span id="field-caption" class="cell-caption">ρ(r) = Σᵢ κ<sub>σ</sub>(r − rᵢ)<br>projected onto the plane</span>
+        <span id="drag-hint" class="drag-hint">drag to rotate · scroll to zoom</span>
+        <div id="atom-tooltip" class="figure-tooltip" role="tooltip" hidden></div>
+        <div id="loading" class="webgl-message" role="status">Loading…</div>
+      </div>
+      <aside id="panel" aria-label="Molecule fields and sampling controls">
+        <div class="panel-title">
+          <h2 id="molecule-title">Ethanol</h2>
+          <p id="molecule-subtitle">C₂H₆O · 9 atoms · QM9 gdb_14</p>
+        </div>
+        <section class="control-section" aria-labelledby="field-label">
+          <h3 id="field-label" class="kicker">Field</h3>
+          <div id="field-controls" class="segments" role="group" aria-labelledby="field-label">
+            <button type="button" data-field="density" aria-pressed="true">Density ρ</button>
+            <button type="button" data-field="features" aria-pressed="false">Features</button>
+          </div>
+          <div id="elements" class="chip-row element-row" role="group" aria-label="Element feature channel" hidden></div>
+        </section>
+        <section class="control-section" aria-labelledby="sampling-label">
+          <h3 id="sampling-label" class="kicker">Sampling</h3>
+          <div id="sampling-controls" class="segments" role="group" aria-labelledby="sampling-label">
+            <button type="button" data-sampling="importance" aria-pressed="true">Importance</button>
+            <button type="button" data-sampling="uniform" aria-pressed="false">Uniform</button>
+          </div>
+          <div id="importance-row" class="slider-row">
+            <label for="M-slider">M</label><input id="M-slider" type="range" min="0" max="6" step="1" value="3" aria-label="Importance sample count M">
+            <output id="M-value" for="M-slider">1 024</output>
+          </div>
+          <div id="uniform-row" class="slider-row" hidden>
+            <label for="n-slider">n</label><input id="n-slider" type="range" min="6" max="24" step="2" value="12" aria-label="Uniform grid cells per side n">
+            <output id="n-value" for="n-slider">12³ = 1 728</output>
+          </div>
+        </section>
+        <section class="control-section" aria-labelledby="kernel-label">
+          <h3 id="kernel-label" class="kicker">Kernel</h3>
+          <div class="slider-row">
+            <label for="sigma-slider">σ</label><input id="sigma-slider" type="range" min="0.10" max="0.60" step="0.01" value="0.45" aria-label="Kernel width sigma in angstroms">
+            <output id="sigma-value" for="sigma-slider">0.45 Å</output>
+          </div>
+        </section>
+        <section class="decode-section" aria-labelledby="decode-label">
+          <div class="decode-heading">
+            <h3 id="decode-label" class="kicker">Decode</h3>
+            <button id="decode-toggle" type="button" class="switch-control" role="switch" aria-checked="false" aria-label="Decode atoms from samples" aria-controls="decode-results"><span class="switch" aria-hidden="true"></span><span id="decode-value">off</span></button>
+          </div>
+          <div id="decode-results" class="decode-results" aria-live="polite" aria-busy="false" aria-hidden="true">
+            <div class="results-inner">
+              <p id="decode-status" role="status" hidden></p>
+              <dl id="result-values" hidden>
+                <div><dt>Count</dt><dd id="result-count"></dd></div>
+                <div><dt>Centers</dt><dd id="result-rms"></dd></div>
+                <div><dt>Types</dt><dd id="result-types"></dd></div>
+              </dl>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <p id="sampling-note" class="figure-note">Points are drawn from ρ/N and weighted by 1/(M q), so the weighted sum returns N exactly; switch to Uniform to see a grid estimate that must be rounded.</p>
+    <section class="readout" aria-label="Live field measurements">
+      <div><span class="kicker">Objects <span class="sym">N</span></span><div class="measurement"><output id="objects-readout">9</output><span>atoms</span></div></div>
+      <div><span class="kicker">Samples <span class="sym">M</span></span><div class="measurement"><output id="samples-readout">1 024</output><span id="samples-unit">points</span></div></div>
+      <div><span class="kicker">Kernel <span class="sym">σ</span></span><div class="measurement"><output id="kernel-readout">0.45</output><span>Å</span></div></div>
+      <div><span class="kicker">Estimate <span class="sym">N̂</span></span><div class="measurement"><output id="estimate-readout">—</output><span id="estimate-rounded"></span></div></div>
+    </section>
+  </main>
+  <noscript><p>This figure needs JavaScript to display the molecule and its fields.</p></noscript>
+</body>
+</html>

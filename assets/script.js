@@ -30,7 +30,12 @@
   const HOME_BACKDROP_OUTLINE_GLOW_BLUR = 6;
   const HOME_KICKER_OUTLINE_GAP_MIN = 8;
   const HOME_KICKER_OUTLINE_GAP_MAX = 14;
-  const PERIODIC_TABLE_EMBED_MESSAGE = "periodic-table:height";
+  // Embedded figures report their height with these message types.
+  const EMBED_HEIGHT_SELECTORS = {
+    "periodic-table:height": "[data-periodic-table-embed]",
+    "orbit-explorer:height": "iframe[data-orbit-explorer-embed]",
+    "cords-figure:height": "iframe[data-cords-embed]",
+  };
   let periodicTableEmbedBridgeReady = false;
 
   if (!body || !routeHost) return;
@@ -362,17 +367,16 @@
   };
 
   const setupPeriodicTableEmbeds = (root = document) => {
-    const embeds = root.querySelectorAll("[data-periodic-table-embed], iframe[data-orbit-explorer-embed]");
+    const embeds = root.querySelectorAll(Object.values(EMBED_HEIGHT_SELECTORS).join(", "));
     if (embeds.length === 0) return;
 
     if (!periodicTableEmbedBridgeReady) {
       window.addEventListener("message", (event) => {
-        if (!event.data || ![PERIODIC_TABLE_EMBED_MESSAGE, "orbit-explorer:height"].includes(event.data.type)) {
+        const selector = event.data && EMBED_HEIGHT_SELECTORS[event.data.type];
+        if (!selector) {
           return;
         }
 
-        const selector = event.data.type === PERIODIC_TABLE_EMBED_MESSAGE
-          ? "[data-periodic-table-embed]" : "iframe[data-orbit-explorer-embed]";
         const iframe = [...document.querySelectorAll(selector)].find(
           (candidate) => candidate.contentWindow === event.source
         );

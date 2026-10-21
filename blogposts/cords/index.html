@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="An overview of CORDS, which represents variable-size sets of objects as continuous density and feature fields, so that a model can learn the number of objects together with their positions and attributes."
+    />
+    <title>CORDS: Continuous Representations of Discrete Structures</title>
+
+    <script>
+      (() => {
+        const ua = navigator.userAgent;
+        const vendor = navigator.vendor || "";
+        if (
+          vendor.includes("Apple") &&
+          /Safari/i.test(ua) &&
+          !/CriOS|Chrome|Chromium|Edg|OPR|FxiOS|Firefox|DuckDuckGo/i.test(ua)
+        ) {
+          document.documentElement.classList.add("is-safari");
+        }
+      })();
+    </script>
+
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [["$$", "$$"]]
+        },
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+    />
+    <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="../../assets/favicon.png" type="image/png" sizes="32x32" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="stylesheet" href="../../assets/styles.css" />
+    <script defer src="../../assets/script.js"></script>
+
+    <style>
+      .post-math {
+        margin: 1.5rem 0 2rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(128, 128, 128, 0.22);
+        border-radius: 20px;
+        overflow-x: auto;
+        background: rgba(128, 128, 128, 0.07);
+      }
+
+      .post-note {
+        margin: 1.5rem 0 2rem;
+        padding: 1rem 1.15rem;
+        border-left: 3px solid currentColor;
+        background: rgba(128, 128, 128, 0.06);
+      }
+
+      .post-embed__frame-shell {
+        min-height: 560px;
+      }
+
+      .post-embed__frame {
+        width: 100%;
+        min-height: 560px;
+        border: 0;
+        display: block;
+      }
+
+      .route-view--post[data-theme="dark"] .post-embed__frame--native-theme {
+        filter: none;
+      }
+
+      .post-inline-image {
+        width: 100%;
+        display: block;
+      }
+
+      .post-inline-video {
+        width: 100%;
+        display: block;
+        height: auto;
+        background: #0b1120;
+      }
+
+      .post-embed--video .post-embed__frame-shell {
+        min-height: 0;
+      }
+
+      .post-hero {
+        padding-bottom: clamp(22px, 4vh, 40px);
+      }
+
+      .post-content {
+        padding-top: clamp(20px, 3.5vh, 36px);
+      }
+
+      .post-embed--narrow {
+        justify-items: center;
+      }
+
+      .post-embed--narrow .post-inline-image,
+      .post-embed--narrow .post-embed__caption {
+        width: min(75%, 920px);
+      }
+
+      .post-embed--nudge-left .post-inline-image {
+        transform: translateX(-2.5%);
+      }
+
+      .post-prose mjx-container[jax="SVG"] {
+        margin: 0 !important;
+      }
+
+      .post-table-shell {
+        margin: 1.5rem 0 0.85rem;
+        border: 1px solid rgba(128, 128, 128, 0.22);
+        border-radius: 20px;
+        overflow-x: auto;
+        background: rgba(128, 128, 128, 0.05);
+      }
+
+      .post-table {
+        width: 100%;
+        min-width: 860px;
+        border-collapse: collapse;
+        font-size: 0.96rem;
+      }
+
+      .post-table--wide {
+        min-width: 1180px;
+      }
+
+      .post-table--xwide {
+        min-width: 1280px;
+      }
+
+      .post-table th,
+      .post-table td {
+        padding: 0.8rem 0.95rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+        vertical-align: middle;
+      }
+
+      .post-table thead th {
+        font-weight: 700;
+        background: rgba(128, 128, 128, 0.08);
+      }
+
+      .post-table th:first-child,
+      .post-table td:first-child {
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .post-table th:not(:first-child),
+      .post-table td:not(:first-child) {
+        text-align: right;
+      }
+
+      .post-table tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .post-table__group {
+        text-align: center !important;
+      }
+
+      .post-table__section-row td {
+        text-align: center !important;
+        font-weight: 700;
+        background: rgba(128, 128, 128, 0.08);
+      }
+
+      .route-view--post p.post-table__caption {
+        margin: 0 0 2rem;
+        font-size: 0.94rem;
+        line-height: 1.64;
+        color: var(--post-muted);
+      }
+
+      .post-subheading {
+        margin: 2.5rem 0 1rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .post-references {
+        padding-left: 1.35rem;
+        margin: 1.5rem 0 0;
+        display: grid;
+        gap: 0.95rem;
+      }
+
+      .post-references li {
+        margin: 0;
+        padding-bottom: 0.95rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+      }
+
+      .post-references li:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .post-cite {
+        white-space: nowrap;
+      }
+
+      @media (max-width: 900px) {
+        .post-hero {
+          padding-bottom: 1.4rem;
+        }
+
+        .post-content {
+          padding-top: 1.25rem;
+        }
+
+        .post-embed__frame-shell,
+        .post-embed__frame {
+          min-height: 460px;
+        }
+
+        .post-embed--narrow .post-inline-image,
+        .post-embed--narrow .post-embed__caption {
+          width: 100%;
+        }
+
+        .post-embed--nudge-left .post-inline-image {
+          transform: none;
+        }
+
+        .post-table {
+          font-size: 0.92rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="page post-page" data-theme="light">
+    <div class="home-backdrop" aria-hidden="true">
+      <div class="home-motion" id="homeMotion"></div>
+    </div>
+
+    <main class="stage" aria-label="Article">
+      <div class="route-host" data-route-host>
+        <article class="route-view route-view--post" data-route-view="page" data-theme="light">
+          <div class="post-shell">
+            <header class="post-nav">
+              <div class="post-nav__group">
+                <a class="post-nav__eyebrow" href="../../index.html#writing">Blogposts</a>
+                <span class="post-nav__title">Research Notes</span>
+              </div>
+              <div class="post-nav__group">
+                <button class="page-toggle" type="button" data-theme-toggle aria-pressed="true">
+                  INVERSE COLORS
+                </button>
+                <a href="../../index.html">Home</a>
+              </div>
+            </header>
+
+            <section class="post-hero">
+              <div>
+                <p class="post-kicker">Oct 21, 2026 / Blogpost</p>
+                <h1>CORDS: Continuous Representations of<br />Discrete Structures</h1>
+                <p class="post-deck">
+                  A blogpost for our paper on CORDS, a representation that turns a set of objects
+                  into continuous fields and back, so that the size of the set is the mass of a density.
+                </p>
+              </div>
+            </section>
+
+            <section class="post-content">
+              <aside class="post-sidebar" aria-label="Article metadata">
+                <div class="post-sidebar__block">
+                  <p class="post-sidebar__label">Published</p>
+                  <p class="post-sidebar__value">Oct 21, 2026</p>
+                </div>
+                <div class="post-sidebar__block">
+                  <p class="post-sidebar__label">Author</p>
+                  <p class="post-sidebar__value">Tin Hadzi Veljkovic</p>
+                </div>
+                <div class="post-sidebar__block">
+                  <p class="post-sidebar__label">Topic</p>
+                  <p class="post-sidebar__value">Variable-size sets</p>
+                </div>
+                <div class="post-sidebar__block">
+                  <p class="post-sidebar__label">Contents</p>
+                  <nav class="post-legend" aria-label="Article sections">
+                    <a class="post-legend__item" href="#introduction">
+                      <span class="post-legend__eyebrow">Introduction</span>
+                      <span class="post-legend__title">Sets whose size changes</span>
+                    </a>
+                    <a class="post-legend__item" href="#representation">
+                      <span class="post-legend__eyebrow">Representation</span>
+                      <span class="post-legend__title">Density and feature fields</span>
+                    </a>
+                    <a class="post-legend__item" href="#sampling">
+                      <span class="post-legend__eyebrow">Practice</span>
+                      <span class="post-legend__title">Sampling the fields</span>
+                    </a>
+                    <a class="post-legend__item" href="#applications">
+                      <span class="post-legend__eyebrow">Applications</span>
+                      <span class="post-legend__title">Molecules, detection and inference</span>
+                    </a>
+                    <a class="post-legend__item" href="#conclusion">
+                      <span class="post-legend__eyebrow">Conclusion</span>
+                      <span class="post-legend__title">Summary and limitations</span>
+                    </a>
+                    <a class="post-legend__item" href="#references">
+                      <span class="post-legend__eyebrow">References</span>
+                      <span class="post-legend__title">Selected references</span>
+                    </a>
+                  </nav>
+                </div>
+              </aside>
+
+              <div class="post-prose">
+                <section class="post-section" id="introduction">
+                  <p class="post-meta">Introduction</p>
+                  <h2>Sets whose size changes</h2>
+
+                  <p>
+                    Many prediction problems have sets as outputs, and the size of the set changes from
+                    one example to the next. An image contains a different number of objects each time,
+                    a molecule has a different number of atoms, and a radio-telescope light curve can be
+                    explained by a different number of bursts.
+                  </p>
+
+                  <p>
+                    In regression, the number of objects is itself something to predict. A model that
+                    counts the digits in an image or the bursts in a light curve outputs an integer that
+                    changes with the input, together with every object's position and attributes. Common
+                    solutions are a fixed number of output slots, as in DETR <span class="post-cite">[<a href="#ref-1">1</a>]</span>, which caps the
+                    number of objects the model can return, or a dedicated head that predicts the
+                    count.
+                  </p>
+
+                  <p>
+                    In generation, a model typically has to decide the number of objects first. For a molecule, the number of atoms is sampled before the geometry, often from a separate distribution or count model, as in EDM <span class="post-cite">[<a href="#ref-2">2</a>]</span>, and positions and atom types are then generated for that many atoms. The alternative is to pad every example to a maximum size and let the model switch the extra entries off. Both become awkward when the count should depend on a continuous condition such as a molecular property: binning the property together with the number of atoms leaves no way to sample a count for a bin the training data never contained.
+                  </p>
+
+                  <p>
+                    CORDS (Continuous Representations of Discrete Structures) removes the separate
+                    count. A set of objects with positions and attributes becomes two continuous fields,
+                    a density that encodes where the objects are and a feature field that carries their
+                    attributes. Every object adds one unit of mass to the density, so the number of
+                    objects is the total mass, \(N = \int \rho(\mathbf r)\,d\mathbf r\). A model that
+                    predicts the fields predicts the count together with positions and attributes, and
+                    the count is a continuous, differentiable function of the density. There is no count
+                    model, padding or fixed slots, and the fields can be turned back into a set.
+                  </p>
+
+                  <p>
+                    Voxel and neural-field representations of molecules and proteins <span class="post-cite">[<a href="#ref-3">3</a>, <a href="#ref-4">4</a>, <a href="#ref-5">5</a>]</span> also avoid fixing the size, but they recover the atoms afterwards by peak finding or a learned decoder; the count and the attributes are not read from the representation itself.
+                  </p>
+
+                  <figure class="post-embed post-embed--narrow">
+                    <a href="../../assets/blog/cords/fig1-mnist-fields.png" target="_blank" rel="noopener" style="display: contents">
+                      <img
+                        class="post-inline-image"
+                        src="../../assets/blog/cords/fig1-mnist-fields.png"
+                        alt="Three stacked planes. Top: an image of overlapping MNIST digits with colored bounding boxes. Middle: the density field rho(r) as gray contours with one bump per digit. Bottom: the per-class feature fields h_k(r) in colors. Drop lines connect each digit to its bump."
+                        loading="lazy"
+                      />
+                    </a>
+                    <figcaption class="post-embed__caption">
+                      An image with <em>N</em> MNIST digits (top) is encoded into a density field
+                      \(\rho(\mathbf r)\) (middle) and per-class feature fields \(h_k(\mathbf r)\)
+                      (bottom). The number of objects is the density mass,
+                      \(N = \int \rho(\mathbf r)\,d\mathbf r\).
+                    </figcaption>
+                  </figure>
+
+                  <div class="post-note">
+                    Paper:
+                    <a href="https://arxiv.org/abs/2601.21583" target="_blank" rel="noopener">CORDS:
+                    Continuous Representations of Discrete Structures</a>, with Erik Bekkers, Michael
+                    Tiemann and Jan-Willem van de Meent, ICLR 2026. Code:
+                    <a href="https://github.com/stases/CORDS" target="_blank"
+                    rel="noopener">github.com/stases/CORDS</a>.
+                  </div>
+                </section>
+
+                <section class="post-section" id="representation">
+                  <p class="post-meta">Representation</p>
+                  <h2>Density and feature fields</h2>
+
+                  <p class="post-subheading">Encoding</p>
+
+                  <p>
+                    Take a set of \(N\) objects, where object \(i\) has a position \(\mathbf r_i \in
+                    \mathbb R^d\) and an attribute vector \(\mathbf x_i \in \mathbb R^c\). The space can
+                    be the image plane, three-dimensional space or a time axis. For an atom, \(\mathbf
+                    x_i\) can be a one-hot encoding of its element. For a digit in an image, it holds the
+                    class and the width and height of its box.
+                  </p>
+
+                  <p>
+                    We place a Gaussian with unit integral and width \(\sigma\), \(\kappa_\sigma(\mathbf
+                    r) = (2\pi\sigma^2)^{-d/2} \exp(-\lVert\mathbf r\rVert^2 / 2\sigma^2)\), at each
+                    position and build two fields:
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \rho(\mathbf r) = \sum_{i=1}^{N} \kappa_\sigma(\mathbf r - \mathbf r_i),
+                    \qquad
+                    \mathbf h(\mathbf r) = \sum_{i=1}^{N} \mathbf x_i\, \kappa_\sigma(\mathbf r - \mathbf r_i).
+                    $$
+                  </div>
+
+                  <p>
+                    The density \(\rho\) has one bump per object. Each of the \(c\) channels of
+                    \(\mathbf h\) is the same sum with every bump scaled by the object's value of that
+                    attribute. The sums do not depend on the order of the objects, so the encoding is
+                    permutation invariant. Every bump has integral one, so
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    N = \int \rho(\mathbf r)\, d\mathbf r.
+                    $$
+                  </div>
+
+                  <p>
+                    The count is the total mass of the density.
+                  </p>
+
+                  <figure class="post-embed post-embed--narrow">
+                    <a href="../../assets/blog/cords/molecule-fields.png" target="_blank" rel="noopener" style="display: contents">
+                      <img
+                        class="post-inline-image"
+                        src="../../assets/blog/cords/molecule-fields.png"
+                        alt="A ball-and-stick molecule above two planes: the density field as gray contours and the feature fields in colors by atom type, with drop lines from each atom to its bump."
+                        loading="lazy"
+                      />
+                    </a>
+                    <figcaption class="post-embed__caption">
+                      A molecule (top) with its density field (middle) and feature fields, one per atom
+                      type (bottom). The fields live in three-dimensional space; the planes are a
+                      two-dimensional view. The number of atoms is the density mass.
+                    </figcaption>
+                  </figure>
+
+                  <p class="post-subheading">Decoding</p>
+
+                  <p>
+                    We recover the set in three steps. <strong>Count:</strong> the total mass of
+                    the density gives the number of objects \(\hat N\).
+                  </p>
+
+                  <p>
+                    <strong>Positions.</strong> Find the \(\hat N\) centers whose kernels add up to the
+                    density,
+                  </p>
+
+                  <div class="post-math">
+                    $$
+                    \min_{\hat{\mathbf r}_1, \ldots, \hat{\mathbf r}_{\hat N}}
+                    \int \Big( \rho(\mathbf r) - \sum_{j=1}^{\hat N} \kappa_\sigma(\mathbf r - \hat{\mathbf r}_j) \Big)^{2} d\mathbf r.
+                    $$
+                  </div>
+
+                  <p>
+                    For a field from the encoder, the original positions minimize this. For molecules we start from a Gaussian mixture fit to the samples and refine the centers with L-BFGS; for images we start from the peaks of the density.
+                  </p>
+
+                  <p>
+                    <strong>Attributes.</strong> With the centers fixed, \(\mathbf h\) is a sum of the same kernels, each weighted by its object's attributes, so the attributes are the solution of one small linear system whose matrix holds the overlaps between kernels. Solving it separates neighboring kernels again; for categorical attributes we take the largest channel.
+                  </p>
+
+                  <p>
+                    For fields produced by the encoder and evaluated exactly, the three steps return the original set up to order, provided the kernels at distinct centers are linearly independent and a sum of equal-weight kernels determines its centers. In practice the fields are known at finitely many points, nearby kernels overlap, and a model's prediction is only approximately the encoding of a set; each of these limits the accuracy of the decoded set.
+                  </p>
+                </section>
+
+                <section class="post-section" id="sampling">
+                  <p class="post-meta">Practice</p>
+                  <h2>Sampling the fields</h2>
+
+                  <p>
+                    A network cannot take a continuous function as input, so we evaluate the fields at
+                    \(M\) locations \(\mathbf r_s\) and give the network the tuples \((\mathbf r_s,
+                    \rho(\mathbf r_s), \mathbf h(\mathbf r_s))\). There are two ways to choose the
+                    locations.
+                  </p>
+
+                  <p>
+                    Uniform sampling evaluates the fields on a regular grid. It suits images and time
+                    series, which already lie on grids. For molecules a grid is inefficient: the molecule
+                    fills a small part of space, the number of grid points grows cubically with the
+                    resolution, and a fixed box imposes boundaries. For molecules we use importance
+                    sampling instead. We draw locations with probability proportional to the density and
+                    evaluate the fields there. The samples concentrate where the atoms are, no bounding
+                    box is needed, and the model can learn the coordinates and the field values jointly
+                    for molecules of any size.
+                  </p>
+
+                  <figure class="post-embed">
+                    <a href="../../assets/blog/cords/sampling.png" target="_blank" rel="noopener">
+                      <img
+                        class="post-inline-image"
+                        src="../../assets/blog/cords/sampling.png"
+                        alt="Two panels of a two-dimensional density with feature-field colors: on the left, sample points concentrated around the density bumps; on the right, sample points on a regular grid."
+                        loading="lazy"
+                      />
+                    </a>
+                    <figcaption class="post-embed__caption">
+                      Sampling strategies for evaluating fields. Left: importance sampling draws
+                      coordinates in proportion to \(\rho\). Right: uniform sampling evaluates the
+                      fields on a fixed grid. The curves are isocontours of \(\rho(\mathbf r)\) and the
+                      colors show the feature fields \(h_k(\mathbf r)\).
+                    </figcaption>
+                  </figure>
+
+                  <p>
+                    The sampling scheme decides the network. Importance samples form a large unordered
+                    point set, and we process it with Erwin <span class="post-cite">[<a href="#ref-6">6</a>]</span>, a hierarchical transformer that
+                    scales to thousands of points. Images and time series use ordinary 2D and 1D convolutional networks (CNNs).
+                  </p>
+
+                  <p>
+                    On samples, the decoder replaces its integrals by weighted sums. A density predicted by a model rarely sums to an exact integer, so the count estimate is rounded. For generated molecules the sampling distribution is not known, so we train with the density rescaled so that its mean over the samples equals the number of atoms, and at generation time the rounded mean of the generated density is the count.
+                  </p>
+
+                  <figure class="post-embed">
+                    <div class="post-embed__frame-shell">
+                      <iframe class="post-embed__frame post-embed__frame--native-theme" data-cords-embed src="../../cords-molecules.html?embed=1" title="Interactive CORDS molecule fields" loading="lazy" scrolling="no"></iframe>
+                    </div>
+                    <figcaption class="post-embed__caption">
+                      The fields of a molecule, computed live. Choose a molecule, \(\sigma\), the sampling scheme
+                      and the number of samples \(M\), and view the density or the feature field of one element.
+                      Atoms and their feature fields share one color per element: H amber, C blue, N teal, O red,
+                      F pink. Decode recovers the count \(\hat N\), the positions and the types from the samples
+                      and reports their errors. No trained model is involved: these are encode-decode roundtrips
+                      of the exact fields.
+                    </figcaption>
+                  </figure>
+
+                </section>
+
+                <section class="post-section" id="applications">
+                  <p class="post-meta">Applications</p>
+                  <h2>Molecules, detection and inference</h2>
+
+                  <p class="post-subheading">Molecules</p>
+
+                  <p>
+                    We use QM9, small organic molecules <span class="post-cite">[<a href="#ref-7">7</a>]</span>, and GEOM-Drugs, larger drug-like molecules <span class="post-cite">[<a href="#ref-8">8</a>]</span>. Each atom carries its element and, on GEOM-Drugs, its charge. At every training step we encode the molecule, draw \(M\) importance samples and give them to Erwin. For generation, a diffusion model denoises the sample locations and the field values together, so the number of atoms, their positions and their elements all come out of the generated fields; we decode to atoms only for the metrics that need a molecular graph.
+                  </p>
+
+                  <p>
+                    On QM9, the molecule stability is 82.3% under the standard RDKit evaluation, against 82.0% for EDM <span class="post-cite">[<a href="#ref-2">2</a>]</span> and 89.4% for GeoLDM <span class="post-cite">[<a href="#ref-9">9</a>]</span>; under the protocol of VoxMol and FuncMol, which also use continuous representations, it is 93.8%, about 4.5 points above both <span class="post-cite">[<a href="#ref-3">3</a>, <a href="#ref-4">4</a>]</span>. On GEOM-Drugs the atom stability is behind EDM and GeoLDM. Without an equivariant backbone, the model is competitive with equivariant graph networks, though the strongest of them are ahead.
+                  </p>
+
+                  <p>
+                    Because the count comes out of the fields, conditional generation needs no separate
+                    count model. We condition on a continuous property, the polarizability, without
+                    binning it or the number of atoms. To test generalization, we remove a range of
+                    polarizability from training and condition on it at inference.
+                  </p>
+
+                  <figure class="post-embed post-embed--narrow">
+                    <a href="../../assets/blog/cords/molecule-counts.png" target="_blank" rel="noopener" style="display: contents">
+                      <img
+                        class="post-inline-image"
+                        src="../../assets/blog/cords/molecule-counts.png"
+                        alt="Histogram of the number of atoms N from 13 to 22. The generated distribution (orange bars) follows the data (blue outline), with a lower peak at 19 and more weight at 21 and 22."
+                        loading="lazy"
+                      />
+                    </a>
+                    <figcaption class="post-embed__caption">
+                      Conditional generation on QM9. The distribution of the number of atoms \(N\) of generated
+                      molecules (bars) and of the data (outline), conditioned on a polarizability range that was
+                      unseen during training. The generated counts follow the data but are flatter, with less
+                      weight on the most common count and more on the largest ones.
+                    </figcaption>
+                  </figure>
+
+                  <p>
+                    The same sampled fields also serve property regression, where the network pools its output and nothing is decoded.
+                  </p>
+
+                  <p class="post-subheading">Object detection on MultiMNIST</p>
+
+                  <p>
+                    The objects are the bounding boxes of digits, each with a center, a class and a
+                    size. We encode a scene into a density on the image plane, one feature channel per class and two channels for the width and height; the first figure shows the density and the class channels. A small CNN
+                    predicts these fields from the image, and the decoder turns them into boxes. Scenes
+                    are generated on the fly with up to 15 digits.
+                  </p>
+
+                  <p>
+                    We compare with a DETR-style detector with 15 queries and an anchor-free YOLO-style detector <span class="post-cite">[<a href="#ref-10">10</a>]</span>, all with about 8 million parameters, on a split with exactly 16 digits per image, one more than the training maximum. Between the two splits the average precision (AP) of CORDS falls by 16.4% in relative terms (from 76.8 to 64.2), against 19.5% for DETR and 24.5% for YOLO; DETR stays ahead in absolute AP (65.4 against 64.2 on 16 digits). The comparison measures how AP degrades in a denser scene.
+                  </p>
+
+                  <figure class="post-embed">
+                    <div class="post-embed__frame-shell">
+                      <iframe class="post-embed__frame post-embed__frame--native-theme" data-cords-embed src="../../cords-mnist.html?embed=1" title="Interactive CORDS MultiMNIST fields" loading="lazy" scrolling="no"></iframe>
+                    </div>
+                    <figcaption class="post-embed__caption">
+                      A MultiMNIST scene above its density and feature planes, as in the first figure. Change
+                      the number of digits \(N\) (the paper trains on up to 15), \(\sigma\), the grid
+                      resolution or the number of importance samples, and the feature channel, then decode the
+                      boxes and the count. A larger \(\sigma\) or a coarser grid makes neighboring digits harder
+                      to separate. No trained detector is involved: these are encode-decode roundtrips of the
+                      exact fields.
+                    </figcaption>
+                  </figure>
+
+                  <p class="post-subheading">Simulation-based inference for fast radio bursts</p>
+
+                  <p>
+                    Fast radio bursts are millisecond-scale flashes of extragalactic radio emission <span class="post-cite">[<a href="#ref-11">11</a>, <a href="#ref-12">12</a>]</span>. In our simulator a light curve of photon counts with Poisson noise is a sum of one to six transient components, each with an onset time, an amplitude, a rise time and a skewness, and the task is to infer the posterior over these parameters, including their number, from the observed curve. We put a density \(\rho(t)\) on the time axis with a bump at each onset time and a feature field that carries the other three parameters, append the observed light curve on a grid of 1,000 time points, and train a flow-matching model <span class="post-cite">[<a href="#ref-13">13</a>]</span> to sample fields given the curve. Each sampled field decodes to a count and a set of components, so many samples give the posterior over the count with no separate count model.
+                  </p>
+
+                  <figure class="post-embed">
+                    <a href="../../assets/blog/cords/sbi.png" target="_blank" rel="noopener">
+                      <img
+                        class="post-inline-image"
+                        src="../../assets/blog/cords/sbi.png"
+                        alt="Left: a noisy simulated light curve with five bursts, the predictive median and its 50% band following it, and dashed lines at the true burst locations. Right: a histogram of the decoded number of components with most of the mass on the true count of five."
+                        loading="lazy"
+                      />
+                    </a>
+                    <figcaption class="post-embed__caption">
+                      Simulation-based inference on light curves. Left: an observed light curve with
+                      reconstructions from posterior samples; each sample is decoded into component
+                      parameters and the light curve is simulated again. Right: the posterior over the
+                      number of components for the same observation. About three quarters of the posterior
+                      mass sits on the true count of five and most of the rest on six.
+                    </figcaption>
+                  </figure>
+                </section>
+
+                <section class="post-section" id="conclusion">
+                  <p class="post-meta">Conclusion</p>
+                  <h2>Summary and limitations</h2>
+
+                  <p>
+                    CORDS maps a set of spatial objects with attributes to a density field and feature
+                    fields, and back. The count is the total mass of the density, so a model that works
+                    in field space handles sets of different sizes with the same network, without a
+                    separate count model, padding or fixed slots. The same encoding and the same three decoding steps serve molecules, images and time series, with different networks and training objectives
+                    in each.
+                  </p>
+
+                  <p>
+                    The method has costs. High-fidelity reconstruction of molecules benefits from dense sampling, on the order of \(10^3\) points each, which makes larger molecules
+                    expensive. Decoding adds cost: on QM9, fitting the positions takes 20.0 ms per
+                    molecule on an H100 in a prototype implementation, against 58.8 ms for sampling with
+                    30 steps. In detection,
+                    overlapping kernels make nearby objects hard to separate and the kernel width needs
+                    tuning. The exact inverse holds for fields produced by the encoder, and fields
+                    predicted by a model are decoded approximately. Detection is tested only on
+                    MultiMNIST, and larger benchmarks such as COCO remain open.
+                  </p>
+
+                  <p>
+                    The code is a beta release with the transform, the reconstruction tools and notebooks for molecules and MNIST detection; its training configurations are small demonstrations.
+                  </p>
+                </section>
+
+                <section class="post-section" id="references">
+                  <p class="post-meta">References</p>
+                  <h2>Selected references</h2>
+
+                  <ol class="post-references">
+                    <li id="ref-1">Carion et al. (2020). <a href="https://arxiv.org/abs/2005.12872" target="_blank" rel="noopener">End-to-End Object Detection with Transformers</a>. <em>ECCV</em>.</li>
+                    <li id="ref-2">Hoogeboom et al. (2022). <a href="https://arxiv.org/abs/2203.17003" target="_blank" rel="noopener">Equivariant Diffusion for Molecule Generation in 3D</a>. <em>ICML</em>.</li>
+                    <li id="ref-3">Pinheiro et al. (2023). <a href="https://arxiv.org/abs/2306.07473" target="_blank" rel="noopener">3D molecule generation by denoising voxel grids</a>. <em>NeurIPS</em>.</li>
+                    <li id="ref-4">Kirchmeyer et al. (2024). <a href="https://arxiv.org/abs/2501.08508" target="_blank" rel="noopener">Score-based 3D molecule generation with neural fields</a>. <em>NeurIPS</em>.</li>
+                    <li id="ref-5">Faltings et al. (2025). <a href="https://arxiv.org/abs/2506.19820" target="_blank" rel="noopener">ProxelGen: Generating Proteins as 3D Densities</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-6">Zhdanov et al. (2025). <a href="https://arxiv.org/abs/2502.17019" target="_blank" rel="noopener">Erwin: A Tree-based Hierarchical Transformer for Large-scale Physical Systems</a>. <em>ICML</em>.</li>
+                    <li id="ref-7">Ramakrishnan et al. (2014). <a href="https://doi.org/10.1038/sdata.2014.22" target="_blank" rel="noopener">Quantum chemistry structures and properties of 134 kilo molecules</a>. <em>Scientific Data</em>.</li>
+                    <li id="ref-8">Axelrod and Gómez-Bombarelli (2022). <a href="https://doi.org/10.1038/s41597-022-01288-4" target="_blank" rel="noopener">GEOM, energy-annotated molecular conformations for property prediction and molecular generation</a>. <em>Scientific Data</em>.</li>
+                    <li id="ref-9">Xu et al. (2023). <a href="https://arxiv.org/abs/2305.01140" target="_blank" rel="noopener">Geometric Latent Diffusion Models for 3D Molecule Generation</a>. <em>ICML</em>.</li>
+                    <li id="ref-10">Wang et al. (2024). <a href="https://arxiv.org/abs/2405.14458" target="_blank" rel="noopener">YOLOv10: Real-Time End-to-End Object Detection</a>. <em>NeurIPS</em>.</li>
+                    <li id="ref-11">Petroff et al. (2022). <a href="https://doi.org/10.1007/s00159-022-00139-w" target="_blank" rel="noopener">Fast radio bursts at the dawn of the 2020s</a>. <em>The Astronomy and Astrophysics Review</em>.</li>
+                    <li id="ref-12">Zhang (2023). <a href="https://doi.org/10.1103/RevModPhys.95.035005" target="_blank" rel="noopener">The physics of fast radio bursts</a>. <em>Reviews of Modern Physics</em>.</li>
+                    <li id="ref-13">Dax et al. (2023). <a href="https://arxiv.org/abs/2305.17161" target="_blank" rel="noopener">Flow Matching for Scalable Simulation-Based Inference</a>. <em>NeurIPS</em>.</li>
+                  </ol>
+                </section>
+              </div>
+            </section>
+
+            <footer class="post-footer">
+              <a href="../../index.html#writing">Blogposts</a>
+            </footer>
+          </div>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>
