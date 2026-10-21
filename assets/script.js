@@ -362,16 +362,18 @@
   };
 
   const setupPeriodicTableEmbeds = (root = document) => {
-    const embeds = root.querySelectorAll("[data-periodic-table-embed]");
+    const embeds = root.querySelectorAll("[data-periodic-table-embed], iframe[data-orbit-explorer-embed]");
     if (embeds.length === 0) return;
 
     if (!periodicTableEmbedBridgeReady) {
       window.addEventListener("message", (event) => {
-        if (!event.data || event.data.type !== PERIODIC_TABLE_EMBED_MESSAGE) {
+        if (!event.data || ![PERIODIC_TABLE_EMBED_MESSAGE, "orbit-explorer:height"].includes(event.data.type)) {
           return;
         }
 
-        const iframe = [...document.querySelectorAll("[data-periodic-table-embed]")].find(
+        const selector = event.data.type === PERIODIC_TABLE_EMBED_MESSAGE
+          ? "[data-periodic-table-embed]" : "iframe[data-orbit-explorer-embed]";
+        const iframe = [...document.querySelectorAll(selector)].find(
           (candidate) => candidate.contentWindow === event.source
         );
 

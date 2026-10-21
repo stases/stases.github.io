@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbit Explorer</title>
+  <meta name="description" content="Explore eleven real MP-20 crystals, their Wyckoff orbits, free coordinates and lattice parameters, one orbit at a time.">
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const params = new URLSearchParams(location.search);
+      if (params.get('embed') === '1') root.classList.add('embed-mode');
+      let theme = params.get('theme');
+      if (theme !== 'light' && theme !== 'dark') {
+        try {
+          const source = window.frameElement?.closest('[data-theme]') || (window.frameElement && parent.document.body);
+          theme = source?.dataset.theme;
+        } catch (_) { /* Cross-origin embeds use the system preference. */ }
+      }
+      root.dataset.theme = theme === 'light' || theme === 'dark' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Roboto:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="stylesheet" href="scripts/orbit-explorer/styles.css">
+  <script type="importmap">
+    {"imports":{"three":"./scripts/orbit-explorer/vendor/three/three.module.min.js","three/addons/":"./scripts/orbit-explorer/vendor/three/addons/"}}
+  </script>
+  <script src="scripts/orbit-explorer/crystals.js"></script>
+  <script type="module" src="scripts/orbit-explorer/app.js"></script>
+</head>
+<body>
+  <header class="standalone-header">
+    <div><h1>Orbit Explorer</h1><p>Real MP-20 crystals, one token per Wyckoff orbit.</p></div>
+    <a href="blogposts/orbitol/">Back to the post ↗</a>
+  </header>
+  <main id="explorer" aria-label="Orbit Explorer">
+    <div class="toolbar">
+      <div class="crystal-picker"><span class="kicker">Crystal</span><div id="crystals" aria-label="Crystals"></div></div>
+      <div class="view-controls">
+        <button id="polyhedra-toggle" class="switch-control" type="button" role="switch" aria-checked="true">Polyhedra <span class="switch" aria-hidden="true"></span></button>
+        <div class="segments" aria-label="Color atoms by"><button data-mode="orbit" aria-pressed="true">Orbit</button><button data-mode="element" aria-pressed="false">Element</button></div>
+      </div>
+    </div>
+    <div class="main-row">
+      <div id="viewport" tabindex="0" role="group" aria-label="Crystal view. Drag to rotate, scroll or pinch to zoom. Arrow keys rotate; Escape clears selection; double-click refits.">
+        <div class="viewport-badge"><span id="structure-badge"></span><button id="reset" hidden>Reset</button></div>
+        <span id="cell-caption" class="cell-caption"></span>
+        <span id="drag-hint" class="drag-hint">drag to rotate · scroll to zoom</span>
+        <div id="atom-tooltip" class="atom-tooltip" role="tooltip" hidden></div>
+      </div>
+      <aside id="panel" aria-label="Space group and occupied orbits"></aside>
+    </div>
+    <p id="crystal-note" class="crystal-note"></p>
+    <section id="tokens" class="token-panel" aria-label="Token comparison"></section>
+    <section class="wyckoff-drawer">
+      <button id="drawer-toggle" aria-expanded="false" aria-controls="wyckoff-content"><span id="drawer-title" class="kicker"></span><span><span id="drawer-action">Show</span> <span class="chevron" aria-hidden="true">›</span></span></button>
+      <div id="wyckoff-content" class="drawer-content" inert><div class="table-scroll"><table><thead><tr><th>Mult</th><th>Letter</th><th>Site sym.</th><th>Coordinates</th><th>Free</th><th>Occupied</th></tr></thead><tbody id="wyckoff-rows"></tbody></table></div></div>
+    </section>
+  </main>
+</body>
+</html>
