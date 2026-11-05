@@ -274,8 +274,9 @@
                 <p class="post-kicker">Oct 21, 2026 / Blogpost</p>
                 <h1>Orbitol: Crystal Generation on<br />Wyckoff Orbits</h1>
                 <p class="post-deck">
-                  A blogpost for our paper on Orbitol, a diffusion Transformer that generates
-                  crystals in a chosen space group with one token per Wyckoff orbit.
+                  Orbitol is a diffusion Transformer that generates crystals in a requested space
+                  group. It uses one token per Wyckoff orbit, and the symmetry operations place the
+                  remaining atoms.
                 </p>
               </div>
             </section>
@@ -287,12 +288,20 @@
                   <p class="post-sidebar__value">Oct 21, 2026</p>
                 </div>
                 <div class="post-sidebar__block">
+                  <p class="post-sidebar__label">Updated</p>
+                  <p class="post-sidebar__value">Nov 5, 2026</p>
+                </div>
+                <div class="post-sidebar__block">
                   <p class="post-sidebar__label">Author</p>
                   <p class="post-sidebar__value">Tin Hadzi Veljkovic</p>
                 </div>
                 <div class="post-sidebar__block">
-                  <p class="post-sidebar__label">Topic</p>
-                  <p class="post-sidebar__value">Crystal generation</p>
+                  <p class="post-sidebar__label">Links</p>
+                  <p class="post-sidebar__value">
+                    <a href="https://arxiv.org/abs/2610.30086" target="_blank" rel="noopener">Paper</a>
+                    /
+                    <a href="https://github.com/stases/orbitol" target="_blank" rel="noopener">Code</a>
+                  </p>
                 </div>
                 <div class="post-sidebar__block">
                   <p class="post-sidebar__label">Contents</p>
@@ -301,21 +310,17 @@
                       <span class="post-legend__eyebrow">Introduction</span>
                       <span class="post-legend__title">Generating crystals in a chosen space group</span>
                     </a>
-                    <a class="post-legend__item" href="#background">
-                      <span class="post-legend__eyebrow">Background</span>
-                      <span class="post-legend__title">Space groups, orbits and Wyckoff rows</span>
-                    </a>
-                    <a class="post-legend__item" href="#explorer">
+                    <a class="post-legend__item" href="#orbits">
                       <span class="post-legend__eyebrow">Representation</span>
                       <span class="post-legend__title">Orbits as tokens</span>
                     </a>
                     <a class="post-legend__item" href="#method">
                       <span class="post-legend__eyebrow">Method</span>
-                      <span class="post-legend__title">Diffusion on orbit tokens</span>
+                      <span class="post-legend__title">What changes in the model</span>
                     </a>
                     <a class="post-legend__item" href="#results">
                       <span class="post-legend__eyebrow">Results</span>
-                      <span class="post-legend__title">Discovery yield, symmetry and sampling cost</span>
+                      <span class="post-legend__title">Yield, symmetry and speed</span>
                     </a>
                     <a class="post-legend__item" href="#piezo">
                       <span class="post-legend__eyebrow">Application</span>
@@ -339,38 +344,35 @@
                   <h2>Generating crystals in a chosen space group</h2>
 
                   <p>
-                    Many of the properties that a materials search looks for are allowed only in some
-                    crystal classes. Bulk piezoelectricity needs a noncentrosymmetric class other than
-                    432, and pyroelectricity and conventional ferroelectricity need a polar class <span class="post-cite">[<a href="#ref-1">1</a>]</span>.
-                    A generator that accepts a space group can search these classes directly.
+                    Generative models such as MatterGen and Crystalite propose new crystals by learning from
+                    known ones <span class="post-cite">[<a href="#ref-1">1</a>, <a href="#ref-2">2</a>]</span>. Many of them treat a crystal as a set of atoms and have no
+                    control over its space group, and their samples tend to come out less symmetric than the
+                    data. Only 1.7% of the MP-20 training set is in P1, the group that contains nothing but
+                    lattice translations. After relaxation with a machine-learned potential, 28.3% of DiffCSP
+                    samples, 26.4% of MatterGen samples and 21.5% of samples from our Crystalite reproduction
+                    are in P1 <span class="post-cite">[<a href="#ref-3">3</a>, <a href="#ref-1">1</a>]</span>.
                   </p>
 
                   <p>
-                    Many crystal generators, including the base MatterGen model and Crystalite, treat a
-                    crystal as a set of atoms and attach no space group to a sample <span class="post-cite">[<a href="#ref-2">2</a>, <a href="#ref-3">3</a>]</span>.
-                    Their samples also contain far more P1 structures than the training set. P1, the group
-                    that contains only lattice translations, accounts for 1.7% of the MP-20 training set.
-                    After relaxation with a machine-learned potential and no symmetry constraint, with
-                    symmetry detected by spglib at 0.1&nbsp;&Aring;, 28.3% of DiffCSP samples, 26.4% of
-                    MatterGen samples and 21.5% of samples from our Crystalite reproduction are in P1
-                    <span class="post-cite">[<a href="#ref-4">4</a>, <a href="#ref-2">2</a>, <a href="#ref-5">5</a>]</span>. A space-group label can condition a model, but the label alone
-                    does not make the coordinates and lattice obey the group operations <span class="post-cite">[<a href="#ref-2">2</a>]</span>. Other
-                    generators therefore build the operations into the representation: CrystalFormer
-                    generates Wyckoff assignments, DiffCSP++ constrains generation with supplied ones, and
-                    SymADiT and UFO-MGen use orbit representations <span class="post-cite">[<a href="#ref-6">6</a>, <a href="#ref-7">7</a>, <a href="#ref-8">8</a>, <a href="#ref-9">9</a>]</span>.
+                    A materials search needs more than fewer P1 structures, since P1 crystals can be piezoelectric or polar too. It needs control over the space group, because many properties are allowed only in some crystal classes. Bulk
+                    piezoelectricity needs a noncentrosymmetric class other than 432, and pyroelectricity
+                    and conventional ferroelectricity need a polar class <span class="post-cite">[<a href="#ref-4">4</a>]</span>. Giving a model the
+                    group as a label does not solve this, because nothing then forces the coordinates and
+                    the lattice to respect the group's operations <span class="post-cite">[<a href="#ref-1">1</a>]</span>. Other models build the
+                    operations into generation instead. CrystalFormer generates Wyckoff assignments,
+                    DiffCSP++ takes them as given, and SymADiT and UFO-MGen model orbit representations
+                    <span class="post-cite">[<a href="#ref-5">5</a>, <a href="#ref-6">6</a>, <a href="#ref-7">7</a>, <a href="#ref-8">8</a>]</span>.
                   </p>
 
                   <p>
-                    Orbitol is a crystal generator built on Crystalite <span class="post-cite">[<a href="#ref-3">3</a>]</span> that uses one token
-                    per <em>Wyckoff orbit</em> instead of one token per atom. A space group and its
-                    occupied Wyckoff positions, the rows of the group's Wyckoff table, form a
-                    <em>skeleton</em>. Given a skeleton, Orbitol generates an element and the free
-                    coordinates of each orbit, together with a lattice of the right shape. The group
-                    operations then place every atom, so every valid decoded structure has the requested
-                    operations; its detected group can still be a supergroup of the requested one.
-                    Crystalite's code is <a href="https://github.com/joshrosie/crystalite" target="_blank"
-                    rel="noopener">public on GitHub</a>, and our <a
-                    href="../crystalite/index.html">earlier post</a> describes the model.
+                    Our new model, Orbitol, is built on Crystalite <span class="post-cite">[<a href="#ref-2">2</a>]</span> and uses one token per
+                    <em>Wyckoff orbit</em> instead of one token per atom. An orbit is a set of atoms that
+                    the symmetry operations map onto each other. We first fix a space group and the
+                    Wyckoff positions that its orbits occupy, and call this combination the
+                    <em>skeleton</em>. Orbitol then generates an element and the free coordinates of each
+                    orbit, together with a lattice of the shape the group allows, and the operations of
+                    the group place all the other atoms. Every valid structure that comes out is
+                    therefore invariant under the operations of the requested group.
                   </p>
 
                   <figure class="post-embed">
@@ -378,101 +380,49 @@
                       <img
                         class="post-inline-image"
                         src="../../assets/blog/orbitol/fig1-teaser.png"
-                        alt="Left: FeSe in P4/nmm as a skeleton of rows 2a and 2c filled with orbit tokens (Fe on 2a, Se on 2c with a free height z, and a lattice token with a and c), and the asymmetric unit that the group operations copy to tile the cell. Right: MSUN against relaxed space-group JSD to MP-20 train for ten symmetry-aware models, with Orbitol at the highest MSUN."
+                        alt="Left: FeSe in P4/nmm written as a skeleton of Wyckoff rows 2a and 2c with orbit tokens on them (Fe on 2a, Se on 2c with a free height z, and a lattice token with a and c), and the asymmetric unit that the group operations copy to tile the cell. Right: MSUN against relaxed space-group JSD to MP-20 train for ten symmetry-aware models, with Orbitol at the highest MSUN."
                         loading="lazy"
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      (a) For FeSe in <em>P</em>4/<em>nmm</em>, the
-                      skeleton fixes the space group and the occupied rows
-                      2a and 2c; Orbitol generates the elements, the
-                      height <em>z</em> of Se and the lattice lengths
-                      <em>a</em> and <em>c</em>. (b) Discovery yield on
-                      MP-20 (MSUN, defined below) against the
-                      Jensen-Shannon divergence between the space-group
-                      distributions of relaxed samples and of MP-20 train,
-                      for ten symmetry-aware models; bars are binomial
-                      standard errors.
+                      (a) FeSe in <em>P</em>4/<em>nmm</em>. The skeleton fixes the space group and the
+                      occupied Wyckoff positions 2a and 2c, and each of the two orbit tokens stands for two
+                      atoms of the cell. Orbitol predicts the elements, the height <em>z</em> of Se and the
+                      lattice lengths <em>a</em> and <em>c</em>. The coloured piece is the asymmetric unit,
+                      the smallest part of the cell from which the 16 operations of the group build the rest.
+                      (b) Discovery yield on MP-20 (MSUN, explained below) against the Jensen-Shannon
+                      divergence between the space groups of relaxed samples and those of the training set,
+                      for ten symmetry-aware models. A lower divergence, further to the right, means a closer
+                      match. The Orbitol and PLaID++ points are means over three sampling seeds.
                     </figcaption>
                   </figure>
 
+                  <p>
+                    On MP-20, Orbitol had the highest discovery yield we observed among ten
+                    symmetry-aware models. After relaxation it kept its space group about as well as the
+                    best of them, and it samples about 310 times faster than SGEquiDiff, the baseline
+                    with the next highest yield. We then used it to search for piezoelectric materials, and most of the candidates we selected passed our density functional theory checks.
+                  </p>
+
                   <div class="post-note">
-                    In this post, we introduce the orbit representation with an interactive explorer,
-                    describe what it changes in the model, and summarize the results on MP-20 and in a
-                    search for piezoelectric candidates.
+                    Paper:
+                    <a href="https://arxiv.org/abs/2610.30086" target="_blank" rel="noopener">Orbitol:
+                    Crystal Generation on Wyckoff Orbits</a>, with Ivan Žugec, Joshua Rosenthal, Ivor
+                    Lončarić and Jan-Willem van de Meent, arXiv 2026. Code:
+                    <a href="https://github.com/stases/orbitol" target="_blank"
+                    rel="noopener">github.com/stases/orbitol</a>.
                   </div>
                 </section>
 
-                <section class="post-section" id="background">
-                  <p class="post-meta">Background</p>
-                  <h2>Space groups, orbits and Wyckoff rows</h2>
+                <section class="post-section" id="orbits">
+                  <p class="post-meta">Representation</p>
+                  <h2>Orbits as tokens</h2>
 
                   <p>
-                    As in Crystalite, a crystal with \(N\) atoms per cell is a lattice, fractional
-                    coordinates and atom types <span class="post-cite">[<a href="#ref-4">4</a>, <a href="#ref-3">3</a>]</span>:
-                  </p>
-
-                  <div class="post-math">
-                    $$
-                    \mathcal{C} = (L, f, A),
-                    \qquad
-                    L \in \mathbb{R}^{3 \times 3},
-                    \quad
-                    f \in [0,1)^{N \times 3},
-                    \quad
-                    A = (A_1, \ldots, A_N).
-                    $$
-                  </div>
-
-                  <p>
-                    The rows of \(L\) are the lattice vectors and row \(i\) of \(f\) holds the fractional
-                    coordinates of atom \(i\). The <em>space group</em> \(G\) is the set of operations \(f
-                    \mapsto Rf + t\) that map the periodic crystal, atom types included, onto itself.
-                  </p>
-
-                  <p>
-                    Applying every operation of \(G\) to one atom gives its <em>orbit</em>, and the atoms
-                    of an orbit are its <em>members</em>. In a CIF file that lists the space group's
-                    operations, each atom-site line is one orbit. A point on a mirror plane or a rotation
-                    axis is left in place by some operations, which form its <em>site symmetry</em>, so it
-                    has fewer distinct images than a point in general position. The International Tables
-                    list, for each group, the possible kinds of orbit as the rows of a table, the
-                    <em>Wyckoff positions</em> <span class="post-cite">[<a href="#ref-1">1</a>]</span>; we call them <em>Wyckoff rows</em> \(w\). Each row
-                    gives a letter, a site symmetry, a multiplicity \(m_w\) and the coordinates of the
-                    members as functions of \(d_w\) <em>free coordinates</em>: three for the general row,
-                    fewer for special rows, none for fixed rows. The multiplicity counts members in the
-                    conventional cell, the standard cell chosen to show the symmetry, which can be larger
-                    than the smallest repeating cell, the primitive cell. The occupied rows, a row
-                    repeated if it holds several orbits, are the structure's Wyckoff sequence in the sense
-                    used to classify structure types <span class="post-cite">[<a href="#ref-10">10</a>]</span>; together with the space group they form
-                    what we call the skeleton.
-                  </p>
-
-                  <p>
-                    For an orbit \(k\) on row \(w_k\) with free coordinates \(x_k \in [0,1)^{d_{w_k}}\),
-                    the members are
-                  </p>
-
-                  <div class="post-math">
-                    $$
-                    f_{kj} = \mathrm{mod}_1\!\big( W_{w_k,j}\, x_k + v_{w_k,j} \big),
-                    \qquad
-                    j = 1, \ldots, m_{w_k},
-                    $$
-                  </div>
-
-                  <p>
-                    where the matrices \(W_{w,j}\) and offsets \(v_{w,j}\) come from the Wyckoff tables.
-                    Changing \(x_k\) moves all members together, and the operations of \(G\) are preserved
-                    for every value. The lattice obeys the same operations, so its shape is fixed by the
-                    crystal family: a cubic cell has equal lengths and right angles, a triclinic cell has
-                    no such ties <span class="post-cite">[<a href="#ref-1">1</a>]</span>.
-                  </p>
-
-                  <p>
-                    Rutile, TiO<sub>2</sub> in \(P4_2/mnm\), is our running example. Ti sits on row 2a,
-                    which has two members and no free coordinate. O sits on row 4f, which has four members
-                    and one free coordinate \(x\):
+                    Rutile, TiO<sub>2</sub> in \(P4_2/mnm\), shows the idea in a small cell. Its six atoms
+                    form two orbits. The two Ti atoms sit on Wyckoff position 2a, where the symmetry fixes
+                    them completely. The four O atoms sit on position 4f, and all four positions depend on
+                    one free coordinate \(x\):
                   </p>
 
                   <div class="post-math">
@@ -489,36 +439,34 @@
                   </div>
 
                   <p>
-                    The tetragonal cell has \(a = b\) and right angles, which leaves \(a\) and \(c\). Two
-                    elements and three numbers, \(x\), \(a\) and \(c\), describe all six atoms of the
+                    The tetragonal lattice has \(a = b\) and right angles, which leaves \(a\) and \(c\).
+                    Two elements and three numbers, \(x\), \(a\) and \(c\), therefore describe the whole
                     cell.
                   </p>
-                </section>
-
-                <section class="post-section" id="explorer">
-                  <p class="post-meta">Representation</p>
-                  <h2>Orbits as tokens</h2>
 
                   <p>
-                    Orbitol splits a crystal into the skeleton and a <em>fill</em>. The fill is everything
-                    that remains to be generated: an element and \(d_{w_k}\) free coordinates for each
-                    orbit, and the lattice entries that the family leaves free. The model sees one token
-                    per orbit and one lattice token. The lattice token holds \(a\) for cubic cells, \(a\)
-                    and \(c\) for tetragonal and hexagonal cells (trigonal groups use hexagonal axes),
-                    \(a\), \(b\) and \(c\) for orthorhombic cells, \(a\), \(b\), \(c\) and \(\beta\) for
-                    monoclinic cells, and all six parameters for triclinic cells.
+                    In general, the International Tables give each space group a table of Wyckoff positions,
+                    with one row for every kind of orbit the group allows <span class="post-cite">[<a href="#ref-4">4</a>]</span>, and we call these entries
+                    <em>Wyckoff rows</em>. A row gives the number of atoms its orbit places in the
+                    conventional cell, the standard cell for showing the symmetry, and the number of free
+                    coordinates. The general row, whose atoms sit on no symmetry element, has three free
+                    coordinates. Rows on mirror planes or rotation axes have one or two, and fixed rows such
+                    as rutile's 2a have none. Moving a free coordinate moves all atoms of the orbit together,
+                    and the symmetry holds for every value. The lattice obeys the same operations, so the
+                    crystal family (cubic, hexagonal, tetragonal and so on down to triclinic) fixes its shape.
+                    A cubic cell is described by \(a\) alone, while a triclinic cell keeps all six parameters.
+                    The skeleton is the space group together with the list of occupied rows, where a row
+                    appears twice if it holds two orbits.
                   </p>
 
                   <p>
-                    MP-20 structures have about 4.7 orbits on average, against 10.4 atoms in the MP-20
-                    cell, which is almost always primitive, and 18.9 in the conventional cell, so Orbitol
-                    uses about half as many tokens as Crystalite. The continuous numbers shrink more.
-                    Counting three coordinates per atom and six lattice entries for Crystalite, and the
-                    free coordinates and free lattice entries for Orbitol, we find 8.4 numbers per
-                    training structure on average, against about 37. In 64% of cubic MP-20 structures no
-                    orbit has a free coordinate: the skeleton fixes every position, and only the elements
-                    and the length \(a\) are left. At the other end, P1 has only the identity, every orbit
-                    is one atom with three free coordinates, and Orbitol's tokens are Crystalite's.
+                    Orbitol's network sees one token per orbit and one token for the lattice. An MP-20 structure has about 4.7 orbits on average, against 10.4 atoms in the cell that MP-20 stores, which is usually the smaller primitive cell, so
+                    Orbitol needs about half as many tokens as Crystalite. The saving in continuous
+                    numbers is larger. Crystalite denoises three coordinates per atom and six lattice
+                    entries, about 37 numbers for an average MP-20 structure, while Orbitol denoises only
+                    the free coordinates and the free lattice entries, about 8.5 on average. In 64% of the
+                    cubic MP-20 structures no orbit has a free coordinate at all, and only the elements
+                    and the length \(a\) are left to generate. At the other extreme is P1, where no operation other than the lattice translations relates two atoms, so every orbit is a single atom with three free coordinates and Orbitol's tokens are the same as Crystalite's.
                   </p>
 
                   <figure class="post-embed">
@@ -526,37 +474,30 @@
                       <iframe class="post-embed__frame post-embed__frame--native-theme" data-orbit-explorer-embed src="../../orbit-explorer.html?embed=1" title="Interactive Wyckoff-orbit explorer" loading="lazy" scrolling="no"></iframe>
                     </div>
                     <figcaption class="post-embed__caption">
-                      Eleven MP-20 crystals in their conventional cells,
-                      exported with Orbitol's tokenizer. Select an orbit
-                      to highlight its members and the lines or planes on
-                      which its free coordinates move them, and drag the
-                      slider of a free coordinate or a lattice entry to
-                      change the crystal. The two strips below the cell
-                      compare Crystalite's tokens (one per atom) with
-                      Orbitol's (one per orbit, plus the lattice).
+                      Eleven MP-20 crystals in their conventional cells, exported with Orbitol's
+                      tokenizer. Clicking an orbit highlights its atoms and the lines or planes along
+                      which its free coordinates move them, and the sliders change a free coordinate or a lattice length or angle. The two strips below the cell compare Crystalite's tokens, one per
+                      atom, with Orbitol's, one per orbit plus the lattice.
                     </figcaption>
                   </figure>
 
                   <p>
-                    Rutile is selected first. Its O orbit on 4f has \(x = 0.3046\) in the MP-20 entry;
-                    dragging \(x\) moves all four O atoms along their lines, while the two Ti atoms on 2a
-                    stay where they are, and the lattice controls offer only \(a\) and \(c\).
-                    LaScO<sub>3</sub> has four orbits: Sc on the fixed row 4b, La and one O on row 4c with
-                    two free coordinates each, which move their members within mirror planes, and the
-                    other O on the general row 8d with three. In spinel, MgAl<sub>2</sub>O<sub>4</sub>,
-                    the 14-atom MP-20 cell takes 15 Crystalite tokens and 4 Orbitol tokens, and the only
-                    free coordinate is the \(x\) of O on 32e. CsSnF<sub>3</sub> is in P1, and its two
-                    strips are the same.
+                    The explorer opens on rutile, where \(x = 0.3046\) in the MP-20 entry. Dragging \(x\)
+                    slides the four O atoms along their lines while the two Ti atoms stay where they are.
+                    In spinel, MgAl<sub>2</sub>O<sub>4</sub>, the saving is larger. Its 14-atom primitive cell takes 15 Crystalite tokens but only 4 Orbitol tokens, and the \(x\) of the O orbit on row 32e is the only free coordinate in the whole structure. The explorer draws its 56-atom conventional cell. CsSnF<sub>3</sub> is in P1, so its two
+                    token strips are identical.
                   </p>
                 </section>
 
                 <section class="post-section" id="method">
                   <p class="post-meta">Method</p>
-                  <h2>Diffusion on orbit tokens</h2>
+                  <h2>What changes in the model</h2>
 
                   <p>
-                    Orbitol keeps Crystalite's diffusion Transformer <span class="post-cite">[<a href="#ref-3">3</a>]</span> and changes what a
-                    token stands for. The figure below shows the construction for rutile.
+                    Orbitol keeps Crystalite's diffusion Transformer <span class="post-cite">[<a href="#ref-2">2</a>]</span> and changes what a
+                    token stands for. For a given skeleton, the model denoises the element of each orbit (in Crystalite's element encoding) together with the orbit's free coordinates and the free lattice entries. The
+                    skeleton itself is never noised. To decode, we apply the Wyckoff tables and expand
+                    each orbit into its atoms.
                   </p>
 
                   <figure class="post-embed">
@@ -564,63 +505,43 @@
                       <img
                         class="post-inline-image"
                         src="../../assets/blog/orbitol/orbit-representation.png"
-                        alt="Diagram of the rutile orbit representation: the skeleton rows 2a and 4f and the tetragonal family map to a Ti token with no free coordinate, an O token with one free coordinate and a lattice token holding log a and log c, which expand to two Ti atoms, four O atoms and a tetragonal cell shown along c."
+                        alt="Diagram of the rutile orbit representation: the skeleton rows 2a and 4f and the tetragonal family map to a Ti token with no free coordinate, an O token with one free coordinate and a lattice token holding log a and log c, which decode to two fixed Ti atoms, four O atoms and a tetragonal cell shown along c."
                         loading="lazy"
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      Orbit tokens for rutile. Ti on 2a is fixed, one number places all four O atoms
-                      of 4f, and the lattice token carries <em>a</em> and <em>c</em>. The figure
-                      writes the free coordinate as <em>u<sub>k</sub></em> = <em>x</em> &minus; 1/2,
-                      the centered form used in the paper.
+                      Rutile as orbit tokens. Ti on row 2a has no free coordinate, a single number places
+                      all four O atoms of row 4f, and the lattice token holds log <em>a</em> and log
+                      <em>c</em>. The figure writes the free coordinate in the centred form
+                      <em>u</em> = <em>x</em> &minus; 1/2 that the paper uses.
                     </figcaption>
                   </figure>
 
-                  <p class="post-subheading">Noise and target</p>
-
                   <p>
-                    For a given skeleton, the diffusion state holds Crystalite's 16-dimensional encoding
-                    of each orbit's element, the free coordinates of each orbit and the free lattice
-                    entries; the skeleton itself is not diffused. As in Crystalite, one EDM noise level
-                    \(\sigma\) per structure perturbs all three channels <span class="post-cite">[<a href="#ref-11">11</a>, <a href="#ref-3">3</a>]</span>. Free
-                    coordinates are not in equal units. On rutile's 4f row the atom sits at \((x, x, 0)\),
-                    so a step \(\delta\) in \(x\) moves it by \(\sqrt{2}\,\delta\) in fractional units. We
-                    therefore give \(x\) a noise standard deviation of \(\sigma/\sqrt{2}\), so that the
-                    displacement of the atom along its line has standard deviation \(\sigma\). For rows
-                    with several free coordinates, the same scaling uses a fixed metric that is invariant
-                    under the point-group operations of \(G\).
+                    Free coordinates are not all in the same units, so the noise needs rescaling. On rutile's
+                    4f row an atom sits at \((x, x, 0)\), and a step \(\delta\) in \(x\) moves it by
+                    \(\sqrt{2}\,\delta\). We scale the noise on each free coordinate so that atoms move by the
+                    same distance on every row, using a fixed metric that respects the point-group operations.
+                    Periodicity needs similar care. Since \(x\) and \(x + 1\) describe the same position, the
+                    training target averages over all periodic copies of the clean coordinate, weighted by how
+                    likely each copy is given the noisy one, as in DiffCSP and GEODE <span class="post-cite">[<a href="#ref-3">3</a>, <a href="#ref-9">9</a>]</span>. That
+                    average is the posterior mean the sampler assumes, whereas Crystalite's loss looks only at
+                    the nearest copy. Each orbit token carries an embedding of its Wyckoff row, the space
+                    group enters through the adaptive layer norm that already carries the noise level
+                    <span class="post-cite">[<a href="#ref-10">10</a>]</span>, and the network's coordinate output is projected onto the directions each row
+                    allows. These embeddings only tell the network which group and rows it is filling, and the
+                    symmetry would hold without them, since it comes from the decoding step.
                   </p>
 
                   <p>
-                    Because \(x\) and \(x + 1\) are the same position, a noisy coordinate could have come
-                    from any integer copy of the clean one. For a clean \(x\), the training target is the
-                    average of its copies \(x + n\), weighted by their Gaussian likelihood given the noisy
-                    coordinate. Crystalite's loss compares with the nearest copy only, and its optimum
-                    need not be the posterior mean that the diffusion drift requires. DiffCSP's
-                    wrapped-normal diffusion and GEODE also use periodic targets <span class="post-cite">[<a href="#ref-4">4</a>, <a href="#ref-12">12</a>]</span>;
-                    Orbitol applies one to the free coordinates under the fixed metric.
-                  </p>
-
-                  <p class="post-subheading">Network</p>
-
-                  <p>
-                    An orbit token adds an embedding of its Wyckoff row to the embeddings of its noisy
-                    element and coordinates, because what a free coordinate means depends on the row. The
-                    space group enters as a learned embedding added to the noise-level conditioning that
-                    Crystalite injects into every block through adaptive layer normalization <span class="post-cite">[<a href="#ref-13">13</a>]</span>.
-                    These embeddings only inform the network; the member maps and lattice ties enforce the
-                    operations, and the coordinate head is projected onto the directions each row allows.
-                  </p>
-
-                  <p class="post-subheading">GEM for orbit tokens</p>
-
-                  <p>
-                    Crystalite's Geometry Enhancement Module (GEM) adds a geometry-dependent bias to the
-                    attention scores between atom tokens <span class="post-cite">[<a href="#ref-3">3</a>]</span>. An orbit token stands for several
-                    atoms, and the network should see the geometry of all of them. We expand each noisy
-                    orbit into its members, compute atom-pair biases \(\beta_g(a, b)\) for each attention
-                    head \(g\) from approximate minimum-image distances, and contract them to one bias per
-                    pair of orbit tokens.
+                    Crystalite biases its attention with geometry as well. Its Geometry Enhancement Module
+                    (GEM) adds a geometry-dependent term to the attention score of every pair of atoms
+                    <span class="post-cite">[<a href="#ref-2">2</a>]</span>. An orbit token stands for several atoms, so we expand the noisy orbits
+                    into atoms, compute the atom-pair biases, and combine them into one bias per pair of orbit
+                    tokens. Because all atoms of an orbit share its key and value, the orbit should receive
+                    the total attention its atoms would have received, so we combine the biases toward its
+                    atoms with a log-sum-exp. An orbit of four atoms then weighs as much as four atoms,
+                    whereas averaging the biases would have given it the weight of one.
                   </p>
 
                   <figure class="post-embed">
@@ -628,268 +549,190 @@
                       <img
                         class="post-inline-image"
                         src="../../assets/blog/orbitol/gem-orbits.png"
-                        alt="Diagram of GEM for orbit tokens: expanded atoms give atom-pair biases, which a log-sum-exp over the atoms of each key orbit combines into an orbit-level bias matrix with a lattice row holding the log atom count; the orbit biases are added to the attention logits in every layer."
+                        alt="Diagram of GEM for orbit tokens: expanded atoms give atom-pair biases, which a log-sum-exp over the atoms of each key orbit combines into an orbit-level bias matrix with a lattice row holding the log atom count. The orbit biases are added to the attention logits in every layer."
                         loading="lazy"
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      GEM for orbit tokens, for rutile. Atom-pair biases are reduced to one bias per
-                      pair of orbit tokens: one row per query orbit is kept, and the biases to the
-                      atoms of each key orbit are combined by a log-sum-exp. The lattice token has
-                      zero atom biases, so its row holds the log atom count of each orbit.
+                      GEM for orbit tokens in rutile. The biases from one representative atom of each
+                      query orbit are combined by a log-sum-exp over the atoms of each key orbit. The
+                      lattice token has no atom biases, so its row holds the log of each orbit's atom
+                      count. The orbit biases are added to the attention logits in every layer.
                     </figcaption>
                   </figure>
 
                   <p>
-                    With exact distances in a cell that respects the symmetry, every atom of a query orbit
-                    sees the same distances to a key orbit up to a permutation, so one representative
-                    \(r(k)\) per query orbit is enough; for noisy states this holds approximately. The
-                    atoms of a key orbit \(l\) share one key and one value, so the orbit should receive
-                    the total attention its atoms would receive:
-                  </p>
-
-                  <div class="post-math">
-                    $$
-                    B_g[k, l] = \log \sum_{b \in l} \exp \beta_g\big( r(k), b \big).
-                    $$
-                  </div>
-
-                  <p>
-                    The representative then gets the same attention output as in the expanded layer whose
-                    members share their orbit's key and value. Averaging the biases instead would give
-                    four atoms with equal biases the weight of one. In P1 the sum has one term, and the
-                    bias is an ordinary atom-pair bias, as in Crystalite, although ours uses distances
-                    only.
-                  </p>
-
-                  <p class="post-subheading">Sampling</p>
-
-                  <p>
-                    Generation first draws a skeleton from the 3,290 distinct MP-20 training skeletons at
-                    their empirical frequencies; 5.2% of validation and 4.9% of test structures have a
-                    skeleton that does not occur in training. Crystalite's EDM sampler then integrates the
-                    fill from noise in 25 Heun steps, or 49 network evaluations per structure. In P1 the
-                    member maps, metric and projection are identities, and the code reproduces Crystalite
-                    exactly with Crystalite's objective and settings, GEM off and zero row and group
-                    embeddings. The reported models differ from that setting: they use the periodic
-                    target, a distance-only GEM and learned embeddings.
+                    To sample, we draw a skeleton from the 3,290 distinct skeletons of the MP-20 training set
+                    at their training frequencies. Crystalite's EDM sampler <span class="post-cite">[<a href="#ref-11">11</a>, <a href="#ref-2">2</a>]</span> then
+                    denoises the orbit and lattice tokens in 25 Heun steps, which take 49 network evaluations
+                    per structure for the MP-20 model. In P1 the expansion, the noise metric and the
+                    projection all reduce to identities. With Crystalite's loss, GEM switched off and the row
+                    and group embeddings set to zero, the code then reproduces Crystalite exactly.
                   </p>
                 </section>
 
                 <section class="post-section" id="results">
                   <p class="post-meta">Results</p>
-                  <h2>Discovery yield, symmetry and sampling cost</h2>
+                  <h2>Yield, symmetry and speed</h2>
 
                   <p>
-                    We evaluate de novo generation on MP-20 and Alex-MP-20, which contain cells of at most
-                    20 atoms <span class="post-cite">[<a href="#ref-14">14</a>, <a href="#ref-2">2</a>]</span>. The baselines either condition on a space group (CrystaLLM,
-                    CrystaLLM-&pi; and PLaID++) or enforce it (CrystalFormer, SGEquiDiff, WyFormer,
-                    SymmCD, DiffCSP++ and SGFM)
-                    <span class="post-cite">[<a href="#ref-15">15</a>, <a href="#ref-16">16</a>, <a href="#ref-17">17</a>, <a href="#ref-6">6</a>, <a href="#ref-18">18</a>, <a href="#ref-19">19</a>, <a href="#ref-20">20</a>, <a href="#ref-7">7</a>, <a href="#ref-21">21</a>]</span>. For
-                    symmetry alone, we add the agnostic DiffCSP, MatterGen, MiAD <span class="post-cite">[<a href="#ref-22">22</a>]</span> and our
-                    Crystalite reproduction. Every model in the table goes through the same pipeline: the
-                    first 2,500 attempts, with failed attempts kept in the denominator, 500 FIRE steps
-                    with NequIP-OAM-L and no symmetry constraint <span class="post-cite">[<a href="#ref-23">23</a>]</span>, LeMat-GenBench for energies
-                    and novelty <span class="post-cite">[<a href="#ref-24">24</a>]</span>, and spglib at 0.1&nbsp;&Aring; for symmetry <span class="post-cite">[<a href="#ref-5">5</a>]</span>. The
-                    agnostic models are relaxed and checked for symmetry only.
+                    We trained on MP-20 and on Alex-MP-20, which both contain cells of up to 20 atoms
+                    <span class="post-cite">[<a href="#ref-12">12</a>, <a href="#ref-1">1</a>]</span>, and compared Orbitol with nine symmetry-aware models. CrystaLLM,
+                    CrystaLLM-&pi; and PLaID++ declare a space group with each structure, and
+                    CrystalFormer, SGEquiDiff, WyFormer, SymmCD, DiffCSP++ and SGFM enforce one
+                    <span class="post-cite">[<a href="#ref-13">13</a>, <a href="#ref-14">14</a>, <a href="#ref-15">15</a>, <a href="#ref-5">5</a>, <a href="#ref-16">16</a>, <a href="#ref-17">17</a>, <a href="#ref-18">18</a>, <a href="#ref-6">6</a>, <a href="#ref-19">19</a>]</span>. Every
+                    model went through the same pipeline. We took its first 2,500 attempts and counted
+                    failures against it, relaxed the structures with the machine-learned potential NequIP-OAM-L for 500 steps of the FIRE optimizer, without any symmetry constraint <span class="post-cite">[<a href="#ref-20">20</a>]</span>, scored stability and novelty with LeMat-GenBench
+                    <span class="post-cite">[<a href="#ref-21">21</a>]</span>, and detected symmetry with spglib at 0.1&nbsp;&Aring; <span class="post-cite">[<a href="#ref-22">22</a>]</span>. The
+                    symmetry-agnostic DiffCSP, MatterGen, MiAD <span class="post-cite">[<a href="#ref-23">23</a>]</span> and our Crystalite reproduction
+                    were only checked for symmetry.
                   </p>
 
                   <p>
-                    SUN counts attempts that are stable (predicted energy on or below the convex hull of
-                    known phases), unique within the cohort and novel against LeMat-Bulk; MSUN also counts
-                    metastable ones, up to 0.1 eV/atom above the hull. <em>Retention</em> is the share of
-                    attempts whose relaxed structure is still detected in the requested group (or the
-                    declared group, for conditioned models), and relaxing into a supergroup counts as a
-                    loss. <em>Joint yield</em> counts attempts that are MSUN and retained. Retention alone
-                    rewards a model that produces a few groups that survive relaxation, such as
-                    \(Fm\bar{3}m\), so we also report SPARC (symmetry preservation and reference
-                    coverage):
-                  </p>
-
-                  <div class="post-math">
-                    $$
-                    \mathrm{SPARC} = 100\, R_{\mathrm{raw}}\, \mathrm{BC}(p, q)^{2},
-                    \qquad
-                    \mathrm{BC}(p, q) = \sum_g \sqrt{p_g\, q_g},
-                    $$
-                  </div>
-
-                  <p>
-                    where \(R_{\mathrm{raw}}\) is the share of attempts whose relaxed structure keeps the
-                    group detected in its raw structure (76.6% for Orbitol, whose retention of the
-                    requested group is 74.7%), and \(\mathrm{BC}\) is the Bhattacharyya coefficient
-                    between the training frequencies \(p_g\) of the groups and the shares \(q_g\) of
-                    retained attempts in them. An ideal sampler of MP-20 train scores 97.9.
+                    Our main yield metric is MSUN, the share of attempts that give a stable or metastable structure (at most 0.1 eV/atom above the convex hull of known phases) that is also unique among the model's attempts and absent from the LeMat-Bulk database.
+                    Because we care about symmetry, we also ask whether the relaxed structure is still in
+                    the group it was generated in. Retention is the share of attempts for which it is
+                    still in exactly that group, or in the group the model declared, and joint yield is
+                    the share of attempts that are MSUN and retained at the same time.
                   </p>
 
                   <div class="post-table-shell">
                     <table class="post-table" aria-label="De novo generation results on MP-20">
                       <thead>
                         <tr>
-                          <th rowspan="2">Model</th>
-                          <th class="post-table__group" colspan="3">Discovery (%)</th>
-                          <th class="post-table__group" colspan="4">After relaxation</th>
-                        </tr>
-                        <tr>
-                          <th>SUN ↑</th>
-                          <th>MSUN ↑</th>
-                          <th>Joint yield ↑</th>
-                          <th>Retained (%) ↑</th>
+                          <th>Model</th>
+                          <th>MSUN (%) ↑</th>
+                          <th>Joint yield (%) ↑</th>
+                          <th>Group retained (%) ↑</th>
                           <th>SPARC ↑</th>
-                          <th>P1 (%)</th>
                           <th>JSD (bits) ↓</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr class="post-table__section-row">
-                          <td colspan="8">Space group conditioned</td>
+                          <td colspan="6">Space group conditioned</td>
                         </tr>
                         <tr>
                           <td>CrystaLLM</td>
-                          <td>1.00</td>
                           <td>10.4</td>
                           <td>4.6</td>
-                          <td>77.8<sup>c</sup></td>
+                          <td><strong>77.8</strong></td>
                           <td>73.5</td>
-                          <td>4.7</td>
                           <td>0.047</td>
                         </tr>
                         <tr>
                           <td>CrystaLLM-&pi;</td>
-                          <td><strong>1.40</strong></td>
                           <td>16.1</td>
                           <td>8.8</td>
-                          <td>74.3<sup>c</sup></td>
+                          <td>74.3</td>
                           <td>69.4</td>
-                          <td>4.6</td>
                           <td>0.038</td>
                         </tr>
                         <tr>
-                          <td>PLaID++<sup>a</sup></td>
-                          <td>1.16</td>
-                          <td>13.3</td>
-                          <td>7.0</td>
-                          <td><strong>81.2</strong><sup>c</sup></td>
-                          <td>39.7</td>
-                          <td>1.6</td>
-                          <td>0.257</td>
+                          <td>PLaID++</td>
+                          <td>12.0</td>
+                          <td>7.2</td>
+                          <td>76.6</td>
+                          <td>36.3</td>
+                          <td>0.267</td>
                         </tr>
                         <tr class="post-table__section-row">
-                          <td colspan="8">Space group enforced</td>
+                          <td colspan="6">Space group enforced</td>
                         </tr>
                         <tr>
                           <td>CrystalFormer</td>
-                          <td>0.80</td>
                           <td>13.9</td>
                           <td>7.8</td>
                           <td>62.3</td>
                           <td>59.4</td>
-                          <td>11.1</td>
                           <td>0.071</td>
                         </tr>
                         <tr>
                           <td>SGEquiDiff</td>
-                          <td>0.68</td>
                           <td>18.1</td>
                           <td>8.1</td>
                           <td>54.7</td>
                           <td>51.1</td>
-                          <td>11.0</td>
                           <td>0.077</td>
                         </tr>
                         <tr>
-                          <td>WyFormer<sup>b</sup></td>
-                          <td>0.40</td>
+                          <td>WyFormer</td>
                           <td>14.2</td>
                           <td>6.2</td>
                           <td>51.8</td>
                           <td>48.6</td>
-                          <td>11.2</td>
                           <td>0.081</td>
                         </tr>
                         <tr>
-                          <td>SymmCD<sup>b</sup></td>
-                          <td>0.84</td>
+                          <td>SymmCD</td>
                           <td>15.9</td>
                           <td>9.0</td>
                           <td>57.4</td>
                           <td>54.5</td>
-                          <td>11.1</td>
                           <td>0.085</td>
                         </tr>
                         <tr>
                           <td>DiffCSP++</td>
-                          <td>0.60</td>
                           <td>16.2</td>
                           <td>7.6</td>
                           <td>57.3</td>
                           <td>55.1</td>
-                          <td>9.7</td>
                           <td>0.069</td>
                         </tr>
                         <tr>
                           <td>SGFM</td>
-                          <td>1.00</td>
                           <td>16.9</td>
                           <td>10.8</td>
                           <td>73.4</td>
                           <td>71.9</td>
-                          <td>4.9</td>
                           <td><strong>0.027</strong></td>
                         </tr>
                         <tr class="post-table__section-row">
-                          <td colspan="8">Ours (space group enforced)</td>
+                          <td colspan="6">Ours (space group enforced)</td>
                         </tr>
                         <tr>
                           <td><strong>Orbitol</strong></td>
-                          <td>1.11</td>
                           <td><strong>19.0</strong></td>
                           <td><strong>13.8</strong></td>
                           <td>74.7</td>
                           <td><strong>73.8</strong></td>
-                          <td>5.6</td>
                           <td>0.029</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                   <p class="post-table__caption">
-                    De novo generation on MP-20, 2,500 attempts per model; the Orbitol row is the mean
-                    of three sampled cohorts. MP-20 train has 1.7% P1, and an ideal sampler with 2,500
-                    draws has a JSD of 0.0137 bits. SGFM, like Orbitol, draws its Wyckoff templates
-                    from the training set. <sup>a</sup>First 2,500 rows of the released pool; draw count
-                    not verified. <sup>b</sup>Retrained on the training split; WyFormer geometry from
-                    DiffCSP++. <sup>c</sup>Group declared by the model.
+                    De novo generation on MP-20 with 2,500 attempts per model. The Orbitol and PLaID++
+                    rows are means over three sampling seeds. For the three conditioned models, retention uses the group the model declared. SPARC, explained below, combines retention with how well the retained groups match the training distribution. SymmCD and WyFormer are our retrainings on the
+                    training split, and SGFM draws its Wyckoff templates from the training set, as Orbitol
+                    does. An ideal sampler of the training distribution reaches a JSD of about 0.014 bits
+                    at this sample size. The paper has the full tables, including SUN and the P1 shares.
                   </p>
 
                   <p>
-                    Orbitol reached 19.0% MSUN, the highest among the symmetry-aware models we evaluated,
-                    against 18.1% for SGEquiDiff and 16.9% for SGFM. Its SUN, 1.11%, is below that of
-                    CrystaLLM-&pi; and PLaID++, so most of its discoveries lie in the metastable window.
-                    The MSUN margin over SGEquiDiff is small. The margin in joint yield, which also asks
-                    the relaxed structure to keep its group, is larger: 13.8% against 10.8% for SGFM and
-                    8.1% for SGEquiDiff, which keeps its group in 54.7% of attempts. Each comparison uses
-                    one training run per model, the Orbitol checkpoint was chosen by MSUN under our
-                    in-house evaluator during training, and stability is judged from machine-learned
-                    energies.
+                    Orbitol reached 19.0% MSUN, the highest we observed, but SGEquiDiff was close behind at
+                    18.1%. Joint yield separates the models more clearly, with Orbitol at 13.8% and SGFM next
+                    at 10.8%, while SGEquiDiff falls to 8.1% because it keeps its group in only 54.7% of
+                    attempts. Most of Orbitol's discoveries are metastable, and only 1.11% of its attempts are
+                    stable, unique and novel.
                   </p>
 
                   <p>
-                    The agnostic models were not scored for yield here, and we do not claim that orbit
-                    tokens raise yield over Crystalite. On the LeMat-GenBench leaderboard, which scores
-                    the structures that authors submit, agnostic models reach up to 24.1% MSUN
-                    (Crystalite). For the six symmetry-aware models in both sources, our measured MSUN is
-                    4.7 to 13.4 points higher than the leaderboard's, so the two should not be compared
-                    directly.
+                    Each model here is a single training run, the Orbitol checkpoint is the one with the
+                    highest MSUN seen during training, and stability is judged from machine-learned energies.
+                    Since we scored the agnostic models for symmetry only, the table cannot say whether orbit
+                    tokens raise yield over Crystalite itself. Nor should these numbers be set beside the
+                    LeMat-GenBench leaderboard, which scores structures that the authors submit and gives the
+                    symmetry-aware models in both an MSUN 3.4 to 13.4 points lower than ours.
                   </p>
 
                   <p class="post-subheading">Symmetry after relaxation</p>
 
                   <p>
-                    After relaxation, Orbitol has 5.6% P1 structures, against 1.7% in training. Its JSD to
-                    the training groups is 0.029 bits, and SGFM's is 0.027 bits. Both are about twice the
-                    ideal-sampler value, and the difference between them is within the finite-sample
-                    spread.
+                    Among the agnostic models, DiffCSP, MatterGen and our Crystalite reproduction still have 21 to 28% of their relaxed structures in P1, against 1.7% in the training set. The enforced models start close to the training distribution and move away from it during relaxation, Orbitol and SGFM the least. Their JSDs to the training groups,
+                    0.029 and 0.027 bits, are about twice the value of an ideal sampler, and the gap
+                    between them is within sampling noise. Orbitol kept its group in 74.7% of attempts,
+                    close to SGFM's 73.4% and above the 51.8 to 62.3% of the other enforced models.
                   </p>
 
                   <figure class="post-embed">
@@ -902,57 +745,40 @@
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      Raw (hollow markers, pale bars) and relaxed (filled markers, full bars) symmetry
-                      on MP-20: the P1 share, the crystal-system shares and the space-group JSD. The
-                      dotted line is the mean JSD of an ideal sampler with 2,500 draws.
+                      Symmetry of raw (hollow markers, pale bars) and relaxed (filled markers, full bars)
+                      MP-20 samples. The panels show the P1 share, the crystal-system shares and the
+                      space-group JSD to the training set. The dotted line marks the mean JSD of an ideal
+                      sampler with 2,500 draws. Orbitol and PLaID++ are means over three sampling seeds.
                     </figcaption>
                   </figure>
 
                   <p>
-                    Orbitol kept its requested group in 74.7% of attempts, SGFM in 73.4% and the other
-                    enforced models in 51.8 to 62.3%. PLaID++ kept 81.2% of its declared groups, but its
-                    JSD is 0.257 bits: its samples concentrate on a few groups, such as \(Pnma\) and
-                    \(Fm\bar{3}m\), that survive relaxation. SPARC accounts for both effects; Orbitol
-                    scores 73.8, CrystaLLM 73.5 and SGFM 71.9. Repeating the same relaxation on the same
-                    500 structures changed the detected group of up to 17 of them, so differences of a few
-                    points in retention or SPARC can fall within run-to-run variation.
+                    PLaID++ shows why retention alone can mislead. It kept its declared group in 76.6% of attempts, about as often as Orbitol, yet its relaxed JSD is 0.267 bits, nine times higher, because its outputs pile up in a few groups such as \(Pnma\) and \(Fm\bar{3}m\) that rarely change on relaxation. To account for this we introduce SPARC, which multiplies the share of attempts that keep the group they had before relaxation by a measure of how well the kept groups match the training distribution. It uses the group detected before relaxation so that it can also score models that request no group, and it reaches 100 only when every attempt keeps its group and the kept groups follow the training distribution. Orbitol scores 73.8, close to CrystaLLM (73.5) and SGFM
+                    (71.9), and PLaID++ scores 36.3. Relaxation adds some noise to all of these numbers. Repeating the same relaxation on the same 500 structures changed the detected
+                    group of up to 17 of them, so differences of one to three points in retention can be
+                    run-to-run variation.
                   </p>
-
-                  <figure class="post-embed">
-                    <a href="../../assets/blog/orbitol/sparc.png" target="_blank" rel="noopener">
-                      <img
-                        class="post-inline-image"
-                        src="../../assets/blog/orbitol/sparc.png"
-                        alt="Two panels: bars of SPARC for each model on MP-20, with Orbitol highest at 73.8, and a scatter of raw-group retention against distribution mismatch with curves of equal SPARC."
-                        loading="lazy"
-                      />
-                    </a>
-                    <figcaption class="post-embed__caption">
-                      SPARC on MP-20. (a) Score by model; the dashed line
-                      is the ideal sampler (97.9). (b) Its two factors,
-                      raw-group retention and distribution mismatch, with
-                      curves of equal SPARC.
-                    </figcaption>
-                  </figure>
 
                   <p>
                     On Alex-MP-20, Orbitol reached 34.2% MSUN and kept its group in 71.6% of attempts.
-                    LeMat-Bulk contains Alexandria, so novelty on this dataset is measured against a
-                    reference that overlaps the training data.
+                    Novelty is harder to judge on this dataset, because LeMat-Bulk, the reference for
+                    novelty, contains Alexandria and so overlaps the training data.
                   </p>
 
-                  <p class="post-subheading">Sampling cost</p>
+                  <p class="post-subheading">Sampling speed</p>
 
                   <p>
-                    We timed every model in the table on one RTX 6000 Ada, from the prior draw to decoded
-                    structures, with each released sampler at the settings of the quality cohorts and a
-                    tuned batch size (PLaID++ with the authors' 4-bit recipe); we did not compile the
-                    baselines or reduce their step counts. In large batches, Orbitol samples about 920
-                    structures per second, 1.09 s per 1,000: about 310 times faster than SGEquiDiff and 96
-                    to 1,477 times faster than the other symmetry-aware baselines. It uses 49 network
-                    evaluations per structure, against about 2,000 for the diffusion baselines and 500 for
-                    SGFM, and runs packed and compiled. These timings exclude relaxation, which takes
-                    minutes per 1,000 structures and dominates the end-to-end time.
+                    We timed every model in the table on one RTX 6000 Ada, running its released sampler at the
+                    settings used for the results above with the batch size tuned for throughput. Samplers
+                    that handled one structure at a time, such as SGFM's, were batched without changing their
+                    samples. In large batches Orbitol samples about 920 structures per second, or 1.09 s per
+                    1,000, which is about 310 times faster than SGEquiDiff and 96 to 1,477 times faster than
+                    the other symmetry-aware models. The speed comes from a short sampler, with 49 network
+                    evaluations per structure against about 2,000 for the diffusion baselines and 500 for
+                    SGFM, and from the implementation. One token per orbit shortens the sequences, crystals
+                    are packed without padding, the network runs as a compiled CUDA graph and decoding is
+                    vectorized. At this rate relaxation becomes the slow step, since relaxing 1,000 Orbitol
+                    samples for 500 steps takes a little over two minutes on the same GPU.
                   </p>
 
                   <figure class="post-embed">
@@ -960,15 +786,14 @@
                       <img
                         class="post-inline-image"
                         src="../../assets/blog/orbitol/sampling-cost.png"
-                        alt="Two panels: MSUN against sampling throughput for the symmetry-aware models, with Orbitol at about 920 structures per second, and throughput bars with Orbitol's speedup over each baseline."
+                        alt="Two panels: MSUN against sampling throughput for the symmetry-aware models, with Orbitol at about 920 structures per second, and throughput bars with Orbitol's speedup over each baseline, from 96 to 1,477 times."
                         loading="lazy"
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      Sampling cost on MP-20. (a) MSUN against throughput;
-                      the dashed line is the frontier of the baselines.
-                      (b) Throughput, with Orbitol's speedup over each
-                      baseline. Timings count failed attempts.
+                      Sampling cost on MP-20, measured on one RTX 6000 Ada. (a) MSUN against throughput, with the dashed line marking the best trade-off among the baselines. (b) Throughput, with Orbitol's speedup
+                      over each baseline. Timings count failed attempts, and the starred models have
+                      measurement notes in the paper's appendix.
                     </figcaption>
                   </figure>
                 </section>
@@ -978,20 +803,22 @@
                   <h2>Piezoelectric candidates</h2>
 
                   <p>
-                    Piezoelectricity is allowed only in the 20 noncentrosymmetric crystal classes other
-                    than 432 <span class="post-cite">[<a href="#ref-1">1</a>]</span>. We sampled skeletons from these classes with Orbitol models trained
-                    on Alex-MP-20 and MP-20, and kept samples that retained their group after NequIP
-                    relaxation and lay within 0.1 eV/atom of the Alex-MP-20 DFT hull by NequIP energy. A
-                    machine-learned screen, to be reported separately, ranked them by predicted figure of
-                    merit, and 62 went to density functional theory (DFT). After removing four with PBE
-                    band gaps of at most 0.03 eV, 58 candidates in 26 space groups remained: 26 nitrides
-                    and oxynitrides, 23 oxides, 8 halides and one sulfide.
+                    Generating in a requested space group makes targeted searches simple. Piezoelectricity
+                    is allowed only in the 20 noncentrosymmetric crystal classes other than 432 <span class="post-cite">[<a href="#ref-4">4</a>]</span>,
+                    so we sampled skeletons from these classes alone, using Orbitol models trained on MP-20 and on Alex-MP-20. We relaxed the samples with
+                    NequIP-OAM-L and kept those that stayed in their group and came within 0.1 eV/atom of
+                    the Alex-MP-20 DFT hull. A machine-learned screen, which will be described in a
+                    separate paper, then predicted the piezoelectric response of each structure, and we sent 62 structures with a high predicted response to density functional theory (DFT). Four turned out to be metallic or nearly so, with band gaps of at most 0.03 eV in the PBE functional, and were dropped. The
+                    remaining 58 candidates span 26 space groups and comprise 26 nitrides and
+                    oxynitrides, 23 oxides, 8 halides and one sulfide.
                   </p>
 
                   <p>
-                    We relaxed each candidate with PBE and computed its elastic tensor and, with density
-                    functional perturbation theory (DFPT) <span class="post-cite">[<a href="#ref-25">25</a>]</span>, its dielectric and piezoelectric
-                    tensors. The figure of merit is the transverse energy-harvesting product
+                    For each candidate we relaxed the structure with PBE, computed its elastic tensor, and
+                    computed its dielectric and piezoelectric tensors with density functional
+                    perturbation theory (DFPT) <span class="post-cite">[<a href="#ref-24">24</a>]</span>, or with finite differences for two of them. As the
+                    figure of merit we use the transverse energy-harvesting product, maximized over
+                    crystal orientations <span class="post-cite">[<a href="#ref-25">25</a>]</span>,
                   </p>
 
                   <div class="post-math">
@@ -1001,25 +828,30 @@
                   </div>
 
                   <p>
-                    maximized over orientations <span class="post-cite">[<a href="#ref-26">26</a>]</span>, which we also computed for the 702 materials
-                    with a non-zero piezoelectric tensor in the Materials Project's DFPT set
-                    <span class="post-cite">[<a href="#ref-27">27</a>, <a href="#ref-28">28</a>, <a href="#ref-29">29</a>]</span>. The DFT relaxations imposed the crystal
-                    symmetry, so they could not lower it; we therefore checked stability with
-                    \(\Gamma\)-point phonons, which include symmetry-lowering distortions. Following an
-                    unstable mode moved one candidate to a lower-symmetry subgroup. Of the
-                    58 final structures, 55 have no unstable lattice vibration at the zone center
-                    (\(\Gamma\)) and are mechanically stable.
+                    where \(d_{31}\) is a piezoelectric strain coefficient and \(\varepsilon^{T}_{33}\) the
+                    permittivity at fixed stress. We computed the same quantity for the 702 materials with a
+                    non-zero piezoelectric tensor in the Materials Project's DFPT set
+                    <span class="post-cite">[<a href="#ref-26">26</a>, <a href="#ref-27">27</a>, <a href="#ref-28">28</a>]</span>.
                   </p>
 
                   <p>
-                    Relative to a hull of Materials Project and Alexandria phases recomputed with our
-                    settings <span class="post-cite">[<a href="#ref-30">30</a>, <a href="#ref-31">31</a>]</span>, 54 of the 55 lie within 0.1 eV/atom, with a median of 27
-                    meV/atom; the same cut was applied with NequIP before DFT, so this mostly confirms the
-                    filter. Of the 55, 49 match no Materials Project or Alexandria entry in the same space
-                    group. Their median figure of merit is
-                    1.23&times;10<sup>-12</sup>&nbsp;m<sup>2</sup>&nbsp;N<sup>-1</sup>, about nine times
-                    the Materials Project median of 0.133, and 13 of the 55 (12 of the 49 new ones) lie
-                    above the Materials Project's 90th percentile, 3.09.
+                    The DFT relaxations kept the crystal symmetry, so they could not reveal a structure
+                    that would rather distort to a lower symmetry. To check for that, we computed phonons
+                    at the zone center (\(\Gamma\)). One candidate had an unstable mode, and following it
+                    took the structure from \(Cmc2_1\) down to its subgroup \(P2_1\). In the end 56 of the
+                    58 structures had no unstable optical mode at \(\Gamma\), and 55 of these were also mechanically stable, with a positive-definite elastic tensor. Against a hull of Materials Project and Alexandria phases
+                    recomputed with our settings <span class="post-cite">[<a href="#ref-29">29</a>, <a href="#ref-30">30</a>]</span>, 54 of the 55 lie within 0.1 eV/atom,
+                    with a median of 27 meV/atom, so the NequIP-OAM-L energy filter held up for all but one of them. Of the 55, 49 match no Materials Project or Alexandria entry in
+                    the same space group.
+                  </p>
+
+                  <p>
+                    The median figure of merit of the 55 candidates is
+                    1.23&times;10<sup>&minus;12</sup>&nbsp;m<sup>2</sup>/N, about nine times the
+                    Materials Project median of 0.133&times;10<sup>&minus;12</sup>&nbsp;m<sup>2</sup>/N,
+                    and 13 of them lie above the Materials Project's 90th percentile of
+                    3.09&times;10<sup>&minus;12</sup>&nbsp;m<sup>2</sup>/N. The 49 new structures have
+                    the same median, and 12 of them lie above that percentile.
                   </p>
 
                   <figure class="post-embed">
@@ -1027,26 +859,26 @@
                       <img
                         class="post-inline-image"
                         src="../../assets/blog/orbitol/piezo-dft.png"
-                        alt="Two histograms: left, the figure of merit for the 55 Orbitol candidates above the axis and 702 Materials Project piezoelectrics below it, with the candidate median about nine times higher; right, the energy above the hull of the 55 candidates in 10 meV/atom bins."
+                        alt="Two histograms. Left: the figure of merit for the 55 Orbitol candidates above the axis and 702 Materials Project piezoelectrics below it, with the candidate median about nine times higher. Right: the energy above the hull of the 55 candidates in 10 meV/atom bins."
                         loading="lazy"
                       />
                     </a>
                     <figcaption class="post-embed__caption">
-                      Piezoelectric candidates under DFT. (a) Figure of merit
-                      \(d_{31}g_{31}\) for the 55 candidates that pass both stability checks (above
-                      the axis) and the 702 Materials Project piezoelectrics (below); the dashed line
-                      is the Materials Project's 90th percentile. (b) Energy above the hull of the same
-                      55 candidates; the dashed line is 0.1 eV/atom.
+                      Piezoelectric candidates under DFT. (a) Figure of merit of the 55 candidates that
+                      pass both stability checks (above the axis) and of the 702 Materials Project
+                      piezoelectrics (below). The dashed line marks the Materials Project's 90th
+                      percentile. (b) Energy above the hull of the same 55 candidates, with the
+                      0.1 eV/atom threshold dashed.
                     </figcaption>
                   </figure>
 
                   <p>
-                    The shift reflects how the candidates were chosen: they were preselected for a high
-                    predicted figure of merit, and the Materials Project set was not. Against Materials
-                    Project materials of the same point group, their median percentile is 72. DFPT gives
-                    intrinsic single-crystal responses at 0 K, a \(\Gamma\)-point test does not establish
-                    dynamical stability over the Brillouin zone, and the two largest values, 308 and 109,
-                    belong to structures close to an elastic instability.
+                    Much of this shift reflects how the candidates were chosen. We selected them for a
+                    high predicted response, and the Materials Project set was not selected that way.
+                    Compared only with Materials Project materials of the same point group, the
+                    candidates sit at a median percentile of 72. The DFT values are idealized as well, since DFPT gives the intrinsic single-crystal response at zero temperature and a check at \(\Gamma\) does not prove dynamical stability across the whole Brillouin zone. The two
+                    largest values, 308 and 109&times;10<sup>&minus;12</sup>&nbsp;m<sup>2</sup>/N, belong
+                    to structures close to an elastic instability.
                   </p>
                 </section>
 
@@ -1055,18 +887,26 @@
                   <h2>Summary and limitations</h2>
 
                   <p>
-                    With one token per orbit, the skeleton supplies the operations of the group and the
-                    network generates only the free numbers: the elements, the free coordinates and the
-                    free lattice entries. On MP-20 this came with the highest MSUN and joint yield among
-                    the symmetry-aware models we evaluated, at a fraction of their sampling cost.
+                    Writing a crystal as orbits leaves the network a smaller job. The skeleton supplies
+                    the operations of the group, and the network generates only the elements, the free
+                    coordinates and the free lattice entries. On MP-20 this gave the highest MSUN and
+                    joint yield we observed among the symmetry-aware models, symmetry after relaxation
+                    on par with the best of them, and sampling about 100 to 1,500 times faster. In a search for piezoelectrics, most of the candidates we selected passed our DFT checks, and most of those were new.
                   </p>
 
                   <p>
-                    The approach has limits. Skeletons are drawn from those seen in training, so a
-                    skeleton absent from the data cannot be sampled, and unconstrained relaxation can
-                    still change the detected group. The comparisons describe single checkpoints and
-                    cohorts scored with machine-learned energies. A learned skeleton prior could reach
-                    skeletons outside the training set.
+                    The main limitation is the skeleton prior. We draw skeletons from those seen in
+                    training, so Orbitol cannot propose a skeleton that is missing from the data, and
+                    5.2% of validation and 4.9% of test structures have such a skeleton. A learned prior
+                    over skeletons could lift that restriction. The benchmark energies are
+                    machine-learned estimates, and unconstrained relaxation can still move a structure
+                    out of its group.
+                  </p>
+
+                  <p>
+                    The speed is the part we find most promising. Once generation costs about a second per
+                    thousand structures, relaxation and scoring set the cost of a search, and methods that
+                    need many fresh samples, such as reinforcement-learning fine-tuning, become affordable.
                   </p>
                 </section>
 
@@ -1075,37 +915,36 @@
                   <h2>Selected references</h2>
 
                   <ol class="post-references">
-                    <li id="ref-1">Aroyo (ed.) (2016). <a href="https://doi.org/10.1107/97809553602060000114" target="_blank" rel="noopener">International Tables for Crystallography, Volume A: Space-group symmetry</a>. <em>International Union of Crystallography</em>.</li>
-                    <li id="ref-2">Zeni et al. (2025). <a href="https://doi.org/10.1038/s41586-025-08628-5" target="_blank" rel="noopener">A Generative Model for Inorganic Materials Design</a>. <em>Nature</em>.</li>
-                    <li id="ref-3">Hadzi Veljkovic et al. (2026). <a href="https://arxiv.org/abs/2604.02270" target="_blank" rel="noopener">Crystalite: A Lightweight Transformer for Efficient Crystal Modeling</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-4">Jiao et al. (2023). <a href="https://doi.org/10.48550/arXiv.2309.04475" target="_blank" rel="noopener">Crystal Structure Prediction by Joint Equivariant Diffusion</a>. <em>NeurIPS</em>.</li>
-                    <li id="ref-5">Togo et al. (2024). <a href="https://doi.org/10.1080/27660400.2024.2384822" target="_blank" rel="noopener">Spglib: a software library for crystal symmetry search</a>. <em>Science and Technology of Advanced Materials: Methods</em>.</li>
-                    <li id="ref-6">Cao et al. (2025). <a href="https://doi.org/10.1016/j.scib.2025.09.035" target="_blank" rel="noopener">Space Group Informed Transformer for Crystalline Materials Generation</a>. <em>Science Bulletin</em>.</li>
-                    <li id="ref-7">Jiao et al. (2024). <a href="https://openreview.net/forum?id=jkvZ7v4OmP" target="_blank" rel="noopener">Space Group Constrained Crystal Generation</a>. <em>ICLR</em>.</li>
-                    <li id="ref-8">Karmush et al. (2026). <a href="https://arxiv.org/abs/2605.10115" target="_blank" rel="noopener">Generating Symmetric Materials using Latent Flow Matching</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-9">Zhou et al. (2026). <a href="https://arxiv.org/abs/2609.26547" target="_blank" rel="noopener">Topology-Stratified Materials Discovery with A Flow-Based Generative Model</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-10">Allmann and Hinek (2007). <a href="https://doi.org/10.1107/S0108767307038081" target="_blank" rel="noopener">The introduction of structure types into the Inorganic Crystal Structure Database ICSD</a>. <em>Acta Crystallographica Section A</em>.</li>
+                    <li id="ref-1">Zeni et al. (2025). <a href="https://doi.org/10.1038/s41586-025-08628-5" target="_blank" rel="noopener">A Generative Model for Inorganic Materials Design</a>. <em>Nature</em>.</li>
+                    <li id="ref-2">Hadzi Veljkovic et al. (2026). <a href="https://arxiv.org/abs/2604.02270" target="_blank" rel="noopener">Crystalite: A Lightweight Transformer for Efficient Crystal Modeling</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-3">Jiao et al. (2023). <a href="https://doi.org/10.48550/arXiv.2309.04475" target="_blank" rel="noopener">Crystal Structure Prediction by Joint Equivariant Diffusion</a>. <em>NeurIPS</em>.</li>
+                    <li id="ref-4">Aroyo (ed.) (2016). <a href="https://doi.org/10.1107/97809553602060000114" target="_blank" rel="noopener">International Tables for Crystallography, Volume A: Space-group symmetry</a>. <em>International Union of Crystallography</em>.</li>
+                    <li id="ref-5">Cao et al. (2025). <a href="https://doi.org/10.1016/j.scib.2025.09.035" target="_blank" rel="noopener">Space Group Informed Transformer for Crystalline Materials Generation</a>. <em>Science Bulletin</em>.</li>
+                    <li id="ref-6">Jiao et al. (2024). <a href="https://openreview.net/forum?id=jkvZ7v4OmP" target="_blank" rel="noopener">Space Group Constrained Crystal Generation</a>. <em>ICLR</em>.</li>
+                    <li id="ref-7">Karmush et al. (2026). <a href="https://arxiv.org/abs/2605.10115" target="_blank" rel="noopener">SymADiT: Symmetry-Aware Crystal Generation with Latent Flow Matching</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-8">Zhou et al. (2026). <a href="https://arxiv.org/abs/2609.26547" target="_blank" rel="noopener">Topology-Stratified Materials Discovery with A Flow-Based Generative Model</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-9">Lou and Ganose (2026). <a href="https://arxiv.org/abs/2610.01898" target="_blank" rel="noopener">GEODE: Symmetry-Preserving Cartesian Diffusion for Crystal Generation</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-10">Peebles and Xie (2023). <a href="https://doi.org/10.48550/arXiv.2212.09748" target="_blank" rel="noopener">Scalable Diffusion Models with Transformers</a>. <em>ICCV</em>.</li>
                     <li id="ref-11">Karras et al. (2022). <a href="https://proceedings.neurips.cc/paper_files/paper/2022/file/a98846e9d9cc01cfb87eb694d946ce6b-Paper-Conference.pdf" target="_blank" rel="noopener">Elucidating the Design Space of Diffusion-Based Generative Models</a>. <em>NeurIPS</em>.</li>
-                    <li id="ref-12">Lou and Ganose (2026). <a href="https://arxiv.org/abs/2610.01898" target="_blank" rel="noopener">GEODE: Symmetry-Preserving Cartesian Diffusion for Crystal Generation</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-13">Peebles and Xie (2023). <a href="https://doi.org/10.48550/arXiv.2212.09748" target="_blank" rel="noopener">Scalable Diffusion Models with Transformers</a>. <em>ICCV</em>.</li>
-                    <li id="ref-14">Xie et al. (2022). <a href="https://openreview.net/forum?id=03RLpj-tc_" target="_blank" rel="noopener">Crystal Diffusion Variational Autoencoder for Periodic Material Generation</a>. <em>ICLR</em>.</li>
-                    <li id="ref-15">Antunes et al. (2024). <a href="https://doi.org/10.1038/s41467-024-54639-7" target="_blank" rel="noopener">Crystal structure generation with autoregressive large language modeling</a>. <em>Nature Communications</em>.</li>
-                    <li id="ref-16">Bone et al. (2025). <a href="https://arxiv.org/abs/2511.21299v3" target="_blank" rel="noopener">Discovery and recovery of crystalline materials with property-conditioned transformers</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-17">Xu et al. (2026). <a href="https://proceedings.mlr.press/v306/xu26l.html" target="_blank" rel="noopener">PLaID++: A Preference Aligned Language Model for Targeted Inorganic Materials Design</a>. <em>ICML</em>.</li>
-                    <li id="ref-18">Chang et al. (2025). <a href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/697b2f31f99fb79f8a0a16e923b2471d-Abstract-Conference.html" target="_blank" rel="noopener">Space Group Equivariant Crystal Diffusion</a>. <em>NeurIPS</em>.</li>
-                    <li id="ref-19">Kazeev et al. (2025). <a href="https://proceedings.mlr.press/v267/kazeev25a.html" target="_blank" rel="noopener">Wyckoff Transformer: Generation of Symmetric Crystals</a>. <em>ICML</em>.</li>
-                    <li id="ref-20">Levy et al. (2025). <a href="https://openreview.net/forum?id=xnssGv9rpW" target="_blank" rel="noopener">SymmCD: Symmetry-Preserving Crystal Generation with Diffusion Models</a>. <em>ICLR</em>.</li>
-                    <li id="ref-21">Puny et al. (2025). <a href="https://arxiv.org/abs/2509.23822" target="_blank" rel="noopener">Space Group Conditional Flow Matching</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-22">Okhotin et al. (2025). <a href="https://arxiv.org/abs/2511.14426" target="_blank" rel="noopener">MiAD: Mirage Atom Diffusion for De Novo Crystal Generation</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-23">Kavanagh and MIR Group @ Harvard (2026). <a href="https://doi.org/10.5281/zenodo.18775904" target="_blank" rel="noopener">NequIP &amp; Allegro Foundation Potentials</a>. <em>Zenodo</em>.</li>
-                    <li id="ref-24">Betala et al. (2026). <a href="https://arxiv.org/abs/2512.04562" target="_blank" rel="noopener">LeMat-GenBench: A Unified Evaluation Framework for Crystal Generative Models</a>. <em>arXiv preprint</em>.</li>
-                    <li id="ref-25">Wu et al. (2005). <a href="https://doi.org/10.1103/PhysRevB.72.035105" target="_blank" rel="noopener">Systematic treatment of displacements, strains, and electric fields in density-functional perturbation theory</a>. <em>Physical Review B</em>.</li>
-                    <li id="ref-26">Bowen et al. (2014). <a href="https://doi.org/10.1039/C3EE42454E" target="_blank" rel="noopener">Piezoelectric and ferroelectric materials and structures for energy harvesting applications</a>. <em>Energy &amp; Environmental Science</em>.</li>
-                    <li id="ref-27">de Jong et al. (2015). <a href="https://doi.org/10.1038/sdata.2015.53" target="_blank" rel="noopener">A database to enable discovery and design of piezoelectric materials</a>. <em>Scientific Data</em>.</li>
-                    <li id="ref-28">Petousis et al. (2017). <a href="https://doi.org/10.1038/sdata.2016.134" target="_blank" rel="noopener">High-throughput screening of inorganic compounds for the discovery of novel dielectric and optical materials</a>. <em>Scientific Data</em>.</li>
-                    <li id="ref-29">de Jong et al. (2015). <a href="https://doi.org/10.1038/sdata.2015.9" target="_blank" rel="noopener">Charting the complete elastic properties of inorganic crystalline compounds</a>. <em>Scientific Data</em>.</li>
-                    <li id="ref-30">Jain et al. (2013). <a href="https://doi.org/10.1063/1.4812323" target="_blank" rel="noopener">Commentary: The Materials Project: A materials genome approach to accelerating materials innovation</a>. <em>APL Materials</em>.</li>
-                    <li id="ref-31">Schmidt et al. (2023). <a href="https://doi.org/10.1002/adma.202210788" target="_blank" rel="noopener">Machine-Learning-Assisted Determination of the Global Zero-Temperature Phase Diagram of Materials</a>. <em>Advanced Materials</em>.</li>
+                    <li id="ref-12">Xie et al. (2022). <a href="https://openreview.net/forum?id=03RLpj-tc_" target="_blank" rel="noopener">Crystal Diffusion Variational Autoencoder for Periodic Material Generation</a>. <em>ICLR</em>.</li>
+                    <li id="ref-13">Antunes et al. (2024). <a href="https://doi.org/10.1038/s41467-024-54639-7" target="_blank" rel="noopener">Crystal structure generation with autoregressive large language modeling</a>. <em>Nature Communications</em>.</li>
+                    <li id="ref-14">Bone et al. (2025). <a href="https://arxiv.org/abs/2511.21299v3" target="_blank" rel="noopener">Discovery and recovery of crystalline materials with property-conditioned transformers</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-15">Xu et al. (2026). <a href="https://proceedings.mlr.press/v306/xu26l.html" target="_blank" rel="noopener">PLaID++: A Preference Aligned Language Model for Targeted Inorganic Materials Design</a>. <em>ICML</em>.</li>
+                    <li id="ref-16">Chang et al. (2025). <a href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/697b2f31f99fb79f8a0a16e923b2471d-Abstract-Conference.html" target="_blank" rel="noopener">Space Group Equivariant Crystal Diffusion</a>. <em>NeurIPS</em>.</li>
+                    <li id="ref-17">Kazeev et al. (2025). <a href="https://proceedings.mlr.press/v267/kazeev25a.html" target="_blank" rel="noopener">Wyckoff Transformer: Generation of Symmetric Crystals</a>. <em>ICML</em>.</li>
+                    <li id="ref-18">Levy et al. (2025). <a href="https://openreview.net/forum?id=xnssGv9rpW" target="_blank" rel="noopener">SymmCD: Symmetry-Preserving Crystal Generation with Diffusion Models</a>. <em>ICLR</em>.</li>
+                    <li id="ref-19">Puny et al. (2025). <a href="https://arxiv.org/abs/2509.23822" target="_blank" rel="noopener">Space Group Conditional Flow Matching</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-20">Kavanagh and MIR Group @ Harvard (2026). <a href="https://doi.org/10.5281/zenodo.18775904" target="_blank" rel="noopener">NequIP &amp; Allegro Foundation Potentials</a>. <em>Zenodo</em>.</li>
+                    <li id="ref-21">Betala et al. (2026). <a href="https://arxiv.org/abs/2512.04562" target="_blank" rel="noopener">LeMat-GenBench: A Unified Evaluation Framework for Crystal Generative Models</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-22">Togo et al. (2024). <a href="https://doi.org/10.1080/27660400.2024.2384822" target="_blank" rel="noopener">Spglib: a software library for crystal symmetry search</a>. <em>Science and Technology of Advanced Materials: Methods</em>.</li>
+                    <li id="ref-23">Okhotin et al. (2025). <a href="https://arxiv.org/abs/2511.14426" target="_blank" rel="noopener">MiAD: Mirage Atom Diffusion for De Novo Crystal Generation</a>. <em>arXiv preprint</em>.</li>
+                    <li id="ref-24">Wu et al. (2005). <a href="https://doi.org/10.1103/PhysRevB.72.035105" target="_blank" rel="noopener">Systematic treatment of displacements, strains, and electric fields in density-functional perturbation theory</a>. <em>Physical Review B</em>.</li>
+                    <li id="ref-25">Bowen et al. (2014). <a href="https://doi.org/10.1039/C3EE42454E" target="_blank" rel="noopener">Piezoelectric and ferroelectric materials and structures for energy harvesting applications</a>. <em>Energy &amp; Environmental Science</em>.</li>
+                    <li id="ref-26">de Jong et al. (2015). <a href="https://doi.org/10.1038/sdata.2015.53" target="_blank" rel="noopener">A database to enable discovery and design of piezoelectric materials</a>. <em>Scientific Data</em>.</li>
+                    <li id="ref-27">Petousis et al. (2017). <a href="https://doi.org/10.1038/sdata.2016.134" target="_blank" rel="noopener">High-throughput screening of inorganic compounds for the discovery of novel dielectric and optical materials</a>. <em>Scientific Data</em>.</li>
+                    <li id="ref-28">de Jong et al. (2015). <a href="https://doi.org/10.1038/sdata.2015.9" target="_blank" rel="noopener">Charting the complete elastic properties of inorganic crystalline compounds</a>. <em>Scientific Data</em>.</li>
+                    <li id="ref-29">Jain et al. (2013). <a href="https://doi.org/10.1063/1.4812323" target="_blank" rel="noopener">Commentary: The Materials Project: A materials genome approach to accelerating materials innovation</a>. <em>APL Materials</em>.</li>
+                    <li id="ref-30">Schmidt et al. (2023). <a href="https://doi.org/10.1002/adma.202210788" target="_blank" rel="noopener">Machine-Learning-Assisted Determination of the Global Zero-Temperature Phase Diagram of Materials</a>. <em>Advanced Materials</em>.</li>
                   </ol>
                 </section>
               </div>
